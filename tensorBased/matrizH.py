@@ -94,8 +94,8 @@ def getMatrixH(distIm1, distIm2, gamma=2):
 # 	return v
 
 def main():
-	imagen1 = generatePoints(1000)
-	imagen2 = generatePoints(1000)
+	imagen1 = generatePoints(100)
+	imagen2 = generatePoints(100)
 	# print "Image 1", imagen1, '\n'
 	# print "Image 2", imagen2, '\n'
 	transpuesta = transformPoints(imagen1)
