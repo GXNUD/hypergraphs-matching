@@ -4,11 +4,6 @@ from numpy import square, power, zeros, asarray
 import numpy as np
 import math
 
-def showMat(mat):
-	for i in range(mat.shape[0]):
-		for j in range(mat.shape[1]):
-			print ()
-
 def generatePoint(minX,maxX,minY,maxY):
 	px = ((random()*100)%(maxX-minX))+minX;
 	py = ((random()*100)%(maxY-minY))+minY;
@@ -53,6 +48,7 @@ def getMatrixH(distIm1, distIm2, gamma=1):
 	outfile = open("salidaH", "w")
 	dim = len(distIm1) * len(distIm2)
 	H = zeros((dim, dim))
+	mm = [[""] * dim] * dim
 	print ("Shape H:")
 	print (H.shape)
 	hi, hj = 0, 0
@@ -62,13 +58,15 @@ def getMatrixH(distIm1, distIm2, gamma=1):
 				for j in range(len(distIm1)):
 					H[hi][hj] = math.exp(-gamma * pow_2(abs(distIm1[i][j] - distIm2[a][b])))
 					print ("H[%d][%d], H[(%d, %d)][(%d, %d)]" % (hi+1, hj+1, i+1, a+1, j+1, b+1))
-					print (H[hi][hj])
+					print "IM1: %f, IM2: %f\n" % (distIm1[i][j], distIm2[a][b])
+					mm[hi][hj] = ("H[(%d, %d)][(%d, %d)]" % (i+1, a+1, j+1, b+1))
+					outfile.write(str(mm[hi][hj]) + ' | ')
+					# print (H[hi][hj])
 					hj = hj + 1
 					if(hj == (len(distIm1) * len(distIm2))):
 						hj = 0
 						hi = hi+1
-	for i in range(H.shape[0]):
-		outfile.write(str(H[i]) + '\n')
+						outfile.write('\n');
 	outfile.close()
 	return H
 
@@ -131,7 +129,7 @@ def getEigenvector2(H): # hadamard
 
 def main():
 	# imagen1 = generatePoints(3)
-	imagen1 = [(1, 1), (4,1), (4, 5)]
+	imagen1 = [(1, 1), (4, 1), (4, 5)]
 	print ("imagen1: ")
 	print (imagen1)
 	# imagen2 = transformPoints(imagen1, 1, doShuffle=True)
