@@ -99,8 +99,6 @@ def discretize(v, row, col):
 	return matches
 
 def drawMatches(img1, kp1, img2, kp2, matches):
-	print img1.shape
-	print img2.shape
 	(rows1, cols1) = img1.shape
 	(rows2, cols2) = img2.shape
 
@@ -129,8 +127,8 @@ def match(des1, des2):
 	pass
 
 def main():
-	img1 = cv2.imread('gato.jpg')
-	img2 = cv2.imread('lena.jpg')
+	img1 = cv2.imread('./house/house.seq0.png')
+	img2 = cv2.imread('./house/house.seq37.png')
 	# rotate the image by 180 degrees
 	# (h, w) = img1.shape[:2]
 	# center = (w / 2, h / 2)
@@ -142,8 +140,8 @@ def main():
 	img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
 	# get features and distances
-	(kpts1, des1) = getFeatures(img1_gray, 'original_keypoints.jpg', show=False)
-	(kpts2, des2) = getFeatures(img2_gray, 'model_keypoints.jpg', show=False)
+	(kpts1, des1) = getFeatures(img1_gray, './images/original_keypoints.jpg', show=False)
+	(kpts2, des2) = getFeatures(img2_gray, './images/model_keypoints.jpg', show=False)
 
 	dist1 = getDistances(kpts1)
 	dist2 = getDistances(kpts2)
