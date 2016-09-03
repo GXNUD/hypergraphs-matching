@@ -43,6 +43,7 @@ def getFeatures(img, limit= 10, outname="sample", show=False):
 		cv2.imwrite(outname, img_to_write)
 		cv2.imshow("Keypoints", img_to_write)
 		cv2.waitKey()
+	print len(kp)
 	return (kp[:limit], des[:limit]) if len(kp) > limit else (kp, des)
 
 
@@ -50,6 +51,7 @@ def getMatrixH(distIm1, distIm2, gamma=2):
 	# outfile = open("salidaH", "w")
 	n, m = len(distIm1), len(distIm2)
 	dim = n * m
+	print "H dim ", dim
 	H = np.zeros((dim, dim))
 	# mm = [[""] * dim] * dim
 	hi, hj = 0, 0
@@ -78,6 +80,7 @@ def getEigenvector(H):
 	while x < 24:
 		ans = H.dot(v)
 		m = sum(pow_2(ans[i]) for i in xrange(ans.shape[0]))
+		print m
 		v = (1/math.sqrt(m)) * (ans)
 		x += 1
 	return v
@@ -90,66 +93,52 @@ def discretize(v, row, col):
 	for i in xrange(row):
 		for j in xrange(col):
 			pairs.append((j, i))
-	# print "init v ", v
-	# print (pairs)
-	count = 1
 	while (taken < v.size):
-		print count
-		count += 1
 		maxi = v.argmax()
 		c.append(pairs[maxi])
 		matches.append(cv2.DMatch(pairs[maxi][0], pairs[maxi][1], v[maxi]))
-		# print "taken pair", pairs[maxi], " with value ", v[maxi]
 		taken += 1
-		for index, p in enumerate(pairs):
-			if (p[0] == pairs[maxi][0] or p[1] == pairs[maxi][1]) and p != pairs[maxi]: # ono to one
-				# print "has same", p, pairs[maxi]
-				taken += 1
-				v[index] = -1
 		v[maxi] = -1
-	print v
-	print taken, v.size
+		for index, p in enumerate(pairs):
+			if p != pairs[maxi] and v[index] != -1:
+				if (p[0] == pairs[maxi][0] or p[1] == pairs[maxi][1]): # ono to one
+					taken += 1
+					v[index] = -1
 	return matches
 
 def drawMatches(img1, kp1, img2, kp2, matches):
 	(rows1, cols1) = img1.shape
 	(rows2, cols2) = img2.shape
-
 	out = np.zeros((max([rows1, rows2]), cols1 + cols2, 3), dtype='uint8')
-
 	out[:rows1, :cols1] = np.dstack([img1, img1, img1])
 	out[:rows2, cols1:] = np.dstack([img2, img2, img2])
 	for mat in matches:
-		img1_idx = mat.queryIdx
-		img2_idx = mat.trainIdx
+		__queryIdx = mat.queryIdx
+		__trainIdx = mat.trainIdx
 
-		(x1, y1) = kp1[img1_idx].pt
-		(x2, y2) = kp2[img2_idx].pt
+		(x1, y1) = kp1[__queryIdx].pt
+		(x2, y2) = kp2[__trainIdx].pt
 
-		cv2.circle(out, (int(x1), int(y1)), 4, (255, 0, 0), 1)
-		cv2.circle(out, (int(x2) + cols1, int(y2)), 4, (255, 0, 0), 1)
+		cv2.circle(out, (int(x1), int(y1)), 5, (0, 0, 255), 1)
+		cv2.circle(out, (int(x2) + cols1, int(y2)), 5, (0, 255, 0), 1)
 
-		cv2.line(out, (int(x1), int(y1)), (int(x1) + cols1, int(y2)), (255, 0, 0), 1)
+		cv2.line(out, (int(x1), int(y1)), (int(x2) + cols1, int(y2)), (255, 0, 0), 1)
 	cv2.imshow("Matching", out)
 	cv2.waitKey()
 	cv2.destroyWindow("Matching")
 	return out
 
-def match(des1, des2):
-	# ge distances with l2 norm
-	pass
-
 def main():
 	np.set_printoptions(precision=3)
-	img1 = cv2.imread('./house/house.seq80.png')
+	img1 = cv2.imread('./house/house.seq79.png')
 	img2 = cv2.imread('./house/house.seq80.png')
 	# convert to gray
 	img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 	img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
 	# get features and distances
-	(kpts1, des1) = getFeatures(img1_gray, 4, './images/original_keypoints.jpg', show=True)
-	(kpts2, des2) = getFeatures(img2_gray, 4, './images/model_keypoints.jpg', show=True)
+	(kpts1, des1) = getFeatures(img1_gray, 50, './images/original_keypoints.jpg', show=True)
+	(kpts2, des2) = getFeatures(img2_gray, 50, './images/model_keypoints.jpg', show=True)
 
 	dist1 = getDistancesDes(des1)
 	dist2 = getDistancesDes(des2)
