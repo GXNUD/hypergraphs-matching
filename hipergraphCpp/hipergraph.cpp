@@ -88,15 +88,15 @@ float distancePoints(vector<KeyPoint> &point){
     }
   }
 
- for (int i = 0; i < 10; i++) {
-    for (int j = 0; j < 10; j++) {
-    	//if (angulo.at<double>(i,j)> 0.5000000)
-    	//{
-    		 cout << angulo.at<float>(j, i) << " ";
-    	//}
-    }
-    cout << endl;
- }
+ // for (int i = 0; i < 10; i++) {
+ //    for (int j = 0; j < 10; j++) {
+ //    	//if (angulo.at<double>(i,j)> 0.5000000)
+ //    	//{
+ //    		 cout << angulo.at<float>(j, i) << " ";
+ //    	//}
+ //    }
+ //    cout << endl;
+ // }
 }
 
 /*Algoritmo de los k vecinos más cercanos, esto nos permitira conocer
@@ -104,12 +104,12 @@ los indices de la matrix de los vecinos más cercanos,
 para hacer el hipergrafo de la img1 como de img2 */
 float KNN(Mat &matEucl){
   Mat indices(matEucl.rows, 3 , DataType<int>::type);
-	float minDist = 1e6;
+	float minDist = 10e6;
 	int minIdx1 = -1;
 	int minIdx2 = -1;
 	for (int i = 0; i < matEucl.rows; i++){
 		for (int j = 0; j < matEucl.cols; j++){
-			if((matEucl.at<float>(i,j) < minDist)&&(j!=i)){
+			if((matEucl.at<float>(i,j) <= minDist)&&(j!=i)){
 
 				minDist = matEucl.at<float>(i,j);
 				minIdx1 = j;
@@ -118,41 +118,62 @@ float KNN(Mat &matEucl){
 		}
 		minDist = 1e6;
 		for (int j = 0; j < matEucl.cols; j++){
-			if((matEucl.at<float>(i,j) < minDist) &&(j!=minIdx1) &&(j!=i)){
+			if((matEucl.at<float>(i,j) <= minDist) &&(j!=minIdx1) &&(j!=i)){
 
 				minDist = matEucl.at<float>(i,j);
 				minIdx2 = j;
 			}
 			//como guardar los indices en una Matriz de N por 3;
 	 }
-   cout << "indice1" << minIdx1 << "indice2" << minIdx2 << endl;
+   cout << "index0"<< i <<" "<< "indice1" << minIdx1 <<" "<< "indice2" << minIdx2 << endl;
    indices.at<int>(i,0)= i;
    indices.at<int>(i,1) = minIdx1;
    indices.at<int>(i,2) = minIdx2;
 	}
 }
 
+//Calcular el triangulo de los vertices de la imagen.
+
+
 
 int main(int argc, const char *argv[]){
   const Mat imgA = imread("./house/house.seq0.png", 0);  // Load as grayscale
   const Mat imgB = imread("./house/house.seq0.png", 0); // Load as grayscale
-  Mat prueba(4, 4 , DataType<float>::type);
+  Mat prueba(4, 4, DataType<float>::type);
+  //Mat prueba2(4, 4, DataType<float>::type);
   prueba.at<float>(0,0)=0.0;
-  prueba.at<float>(0,1)=1.5;
-  prueba.at<float>(0,2)=2.4;
-  prueba.at<float>(0,3)=0.5;
-  prueba.at<float>(1,0)=1.5;
+  prueba.at<float>(0,1)=0.1;
+  prueba.at<float>(0,2)=0.8;
+  prueba.at<float>(0,3)=0.3;
+  prueba.at<float>(1,0)=0.2;
   prueba.at<float>(1,1)=0.0;
-  prueba.at<float>(1,2)=0.8;
-  prueba.at<float>(1,3)=2.0;
-  prueba.at<float>(2,0)=2.4;
-  prueba.at<float>(2,1)=0.8;
+  prueba.at<float>(1,2)=0.5;
+  prueba.at<float>(1,3)=0.4;
+  prueba.at<float>(2,0)=0.6;
+  prueba.at<float>(2,1)=0.7;
   prueba.at<float>(2,2)=0.0;
-  prueba.at<float>(2,3)=3.4;
+  prueba.at<float>(2,3)=0.2;
   prueba.at<float>(3,0)=0.5;
-  prueba.at<float>(3,1)=2.0;
-  prueba.at<float>(3,2)=3.4;
+  prueba.at<float>(3,1)=0.3;
+  prueba.at<float>(3,2)=0.2;
   prueba.at<float>(3,3)=0.0;
+  //prueba 2
+  // prueba2.at<float>(0,0)=0.0;
+  // prueba2.at<float>(0,1)=1.5;
+  // prueba2.at<float>(0,2)=2.4;
+  // prueba2.at<float>(0,3)=0.5;
+  // prueba2.at<float>(1,0)=1.5;
+  // prueba2.at<float>(1,1)=0.0;
+  // prueba2.at<float>(1,2)=0.8;
+  // prueba2.at<float>(1,3)=2.0;
+  // prueba2.at<float>(2,0)=2.4;
+  // prueba2.at<float>(2,1)=0.8;
+  // prueba2.at<float>(2,2)=0.0;
+  // prueba2.at<float>(2,3)=3.4;
+  // prueba2.at<float>(3,0)=0.5;
+  // prueba2.at<float>(3,1)=2.0;
+  // prueba2.at<float>(3,2)=3.4;
+  // prueba2.at<float>(3,3)=0.0;
 
 
   SiftFeatureDetector detector;
@@ -177,10 +198,11 @@ int main(int argc, const char *argv[]){
   drawKeypoints(imgB, keypoints1, output1);
   imwrite("sift_result1.jpg", output);
   //distancePoints(keypoints1);
-  //distanceBetweenImg(descriptorA, descriptorB);
+  distanceBetweenImg(descriptorA, descriptorB);
   //euclidDistance(descriptorA);
   //euclidDistance(descriptorB);
   KNN(prueba);
+  //KNN(prueba2);
 
    cout << keypoints.size() << endl;
    cout << keypoints1.size() << endl;
