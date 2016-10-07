@@ -176,7 +176,7 @@ int main(int argc, const char *argv[]){
   // prueba2.at<float>(3,3)=0.0;
 
 
-  SiftFeatureDetector detector;
+  SiftFeatureDetector detector(4);
 
   vector<KeyPoint> keypoints;
   vector<KeyPoint> keypoints1;
