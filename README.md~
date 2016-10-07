@@ -1,6 +1,12 @@
 # hypergraphs-matching
+<<<<<<< HEAD
+##### linea de compilación proyecto hipergrafCpp 
+=======
 ###### linea de compilación proyecto hipergrafCpp 
+```bash
+>>>>>>> 8e0db319de54e4a5cdb5a10d232a55bfd75605b4
 <g++ hipergraph.cpp -o prueba `pkg-config --cflags --libs opencv`
 >
+```
 
 
