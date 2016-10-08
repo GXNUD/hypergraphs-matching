@@ -8,15 +8,16 @@
 using namespace cv;
 using namespace std;
 
-
-//Distancia ecluidinana entre los puntos de una misma imagen usando descriptores
+// Distancia ecluidinana entre los puntos de una misma imagen usando
+// descriptores
 // double euclidDistance(Mat &vect1){
 // Mat matrixEuclidian(vect1.rows, vect1.rows, DataType<double>::type);
 // for (int i = 0; i <vect1.rows; i++){
 // 	for (int j = 0; j <vect1.rows; j++){
 // 		double sum = 0.0;
 // 		for (int k = 0; k < vect1.cols; k++){
-// 			sum +=((vect1.at<double>(k, i) - vect1.at<double>(k, j))*(vect1.at<double>(k, i) - vect1.at<double>(k, j)));
+// 			sum +=((vect1.at<double>(k, i) - vect1.at<double>(k,
+// j))*(vect1.at<double>(k, i) - vect1.at<double>(k, j)));
 // 		}
 // 		matrixEuclidian.at<double>(i,j) = sqrt(sum);
 // 	}
@@ -30,151 +31,165 @@ using namespace std;
 //   //}
 // }
 
+// //Distancias entre los puntos caracteristicas de una imagen1 usando la
+// posición del punto.
+float distancePoints(vector<KeyPoint> &point) {
+  int n = point.size();
+  Mat matrixEuclidian(n, n, DataType<float>::type),
+      matrixEuclidianSort(n, n, DataType<int>::type);
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      float x1 = point[i].pt.x;
+      float x2 = point[j].pt.x;
+      float y1 = point[i].pt.y;
+      float y2 = point[j].pt.y;
+      matrixEuclidian.at<float>(i, j) =
+          sqrt(((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)));
+    }
+  }
+  // cv::sortIdx(matrixEuclidian, matrixEuclidianSort , CV_SORT_ASCENDING);
 
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < 10; j++) {
 
-// //Distancias entre los puntos caracteristicas de una imagen1 usando la posición del punto.
-float distancePoints(vector<KeyPoint> &point){
-	float n = point.size();
-	Mat matrixEuclidian(n, n, DataType<float>::type), matrixEuclidianSort(n, n, DataType<int>::type);
-	for (int i = 0; i < n; i++){
-		for (int j = 0; j < n; j++){
-			float x1 = point[i].pt.x;
-			float x2 = point[j].pt.x;
-			float y1 = point[i].pt.y;
-			float y2 = point[j].pt.y;
-			matrixEuclidian.at<float>(i,j) = sqrt(((x1 - x2)*(x1 - x2)) + ((y1 - y2)*(y1 - y2)));
-		}
+      cout << matrixEuclidian.at<float>(i, j) << " ";
+    }
+    cout << endl;
+  }
+  // cout<<"ordenado" <<endl;
+  // for (int i = 0; i < 10; i++) {
+  //    	for (int j = 0; j < 10; j++) {
 
-	}
-	//cv::sortIdx(matrixEuclidian, matrixEuclidianSort , CV_SORT_ASCENDING);
-
-	for (int i = 0; i < 10; i++) {
-    	for (int j = 0; j < 10; j++) {
-
-    		 cout << matrixEuclidian.at<float>(i,j) << " ";
-	    }
-	    cout << endl;
-	}
-	// cout<<"ordenado" <<endl;
-	// for (int i = 0; i < 10; i++) {
- //    	for (int j = 0; j < 10; j++) {
-
- //    		 cout << matrixEuclidianSort.at<int>(i,j) << " ";
-	//     }
-	//     cout << endl;
-	// }
+  //    		 cout << matrixEuclidianSort.at<int>(i,j) << " ";
+  //     }
+  //     cout << endl;
+  // }
 }
 
-
-
-
-
-
- // distancia del arcoseno.
- float distanceBetweenImg(Mat &vec1, Mat &vec2){
+// distancia del arcoseno.
+float distanceBetweenImg(Mat &vec1, Mat &vec2) {
   Mat angulo(vec1.rows, vec2.rows, DataType<float>::type);
   for (int i = 0; i < vec1.rows; i++) {
     for (int j = 0; j < vec2.rows; j++) {
-     float producto = 0.0;
-     float norma1 = 0.0;
-     float norma2 = 0.0;
+      float producto = 0.0;
+      float norma1 = 0.0;
+      float norma2 = 0.0;
       for (int k = 0; k < vec1.cols; k++) {
-      	norma1 += vec1.at<float>(k, i)*vec1.at<float>(k, i) ;
-      	norma2 += vec2.at<float>(k, j)*vec2.at<float>(k, j);
-        producto   += (vec1.at<float>(k, i)*vec2.at<float>(k, j));
+        norma1 += vec1.at<float>(k, i) * vec1.at<float>(k, i);
+        norma2 += vec2.at<float>(k, j) * vec2.at<float>(k, j);
+        producto += (vec1.at<float>(k, i) * vec2.at<float>(k, j));
       }
 
-      angulo.at<float>(i, j) = (producto/((sqrt(norma1)*sqrt(norma2))));
+      angulo.at<float>(i, j) = (producto / ((sqrt(norma1) * sqrt(norma2))));
     }
   }
 
- // for (int i = 0; i < 10; i++) {
- //    for (int j = 0; j < 10; j++) {
- //    	//if (angulo.at<double>(i,j)> 0.5000000)
- //    	//{
- //    		 cout << angulo.at<float>(j, i) << " ";
- //    	//}
- //    }
- //    cout << endl;
- // }
+  // for (int i = 0; i < 10; i++) {
+  //    for (int j = 0; j < 10; j++) {
+  //    	//if (angulo.at<double>(i,j)> 0.5000000)
+  //    	//{
+  //    		 cout << angulo.at<float>(j, i) << " ";
+  //    	//}
+  //    }
+  //    cout << endl;
+  // }
 }
 
 /*Algoritmo de los k vecinos más cercanos, esto nos permitira conocer
 los indices de la matrix de los vecinos más cercanos,
 para hacer el hipergrafo de la img1 como de img2 */
-float KNN(Mat &matEucl){
-  Mat indices(matEucl.rows, 3 , DataType<int>::type);
-	float minDist = 10e6;
-	int minIdx1 = -1;
-	int minIdx2 = -1;
-	for (int i = 0; i < matEucl.rows; i++){
-		for (int j = 0; j < matEucl.cols; j++){
-			if((matEucl.at<float>(i,j) <= minDist)&&(j!=i)){
+float KNN(Mat &matEucl) {
+  Mat indices(matEucl.rows, 3, DataType<int>::type);
+  float minDist = 10e6;
+  int minIdx1 = -1;
+  int minIdx2 = -1;
+  for (int i = 0; i < matEucl.rows; i++) {
+    for (int j = 0; j < matEucl.cols; j++) {
+      if ((matEucl.at<float>(i, j) <= minDist) && (j != i)) {
 
-				minDist = matEucl.at<float>(i,j);
-				minIdx1 = j;
-			}
-
-		}
-		minDist = 1e6;
-		for (int j = 0; j < matEucl.cols; j++){
-			if((matEucl.at<float>(i,j) <= minDist) &&(j!=minIdx1) &&(j!=i)){
-
-				minDist = matEucl.at<float>(i,j);
-				minIdx2 = j;
-			}
-			//como guardar los indices en una Matriz de N por 3;
-	 }
-   cout << "index0"<< i <<" "<< "indice1" << minIdx1 <<" "<< "indice2" << minIdx2 << endl;
-   indices.at<int>(i,0)= i;
-   indices.at<int>(i,1) = minIdx1;
-   indices.at<int>(i,2) = minIdx2;
-	}
+        minDist = matEucl.at<float>(i, j);
+        minIdx1 = j;
+      }
+    }
+    minDist = 1e6;
+    for (int j = 0; j < matEucl.cols; j++) {
+      if ((matEucl.at<float>(i, j) <= minDist) && (j != minIdx1) && (j != i)) {
+        minDist = matEucl.at<float>(i, j);
+        minIdx2 = j;
+      }
+      // como guardar los indices en una Matriz de N por 3;
+    }
+    cout << "index0" << i << " "
+         << "indice1" << minIdx1 << " "
+         << "indice2" << minIdx2 << endl;
+    indices.at<int>(i, 0) = i;
+    indices.at<int>(i, 1) = minIdx1;
+    indices.at<int>(i, 2) = minIdx2;
+  }
 }
 
-//Calcular el triangulo de los vertices de la imagen.
+// Calcular el triangulo de los indices obtenidos.
+int indicesIJK(Mat &indices) {
+  for (int i = 0; i < indices.rows; i++) {
+    int xi = i;
+    int yi = int(indices.at<float>(i, 0));
+    int xj = i;
+    int yj = int(indices.at<float>(i, 1));
+    int xk = i;
+    int yk = int(indices.at<float>(i, 2));
 
+    cout << "xi"
+         << " " << xi << " "
+         << "yi"
+         << " " << yi << " "
+         << "xj"
+         << " " << xj << " "
+         << "yj"
+         << " " << yj << " "
+         << "xk"
+         << " " << xk << " "
+         << "yk"
+         << " " << yk << endl;
+  }
+}
 
-
-int main(int argc, const char *argv[]){
-  const Mat imgA = imread("./house/house.seq0.png", 0);  // Load as grayscale
+int main(int argc, const char *argv[]) {
+  const Mat imgA = imread("./house/house.seq0.png", 0); // Load as grayscale
   const Mat imgB = imread("./house/house.seq0.png", 0); // Load as grayscale
   Mat prueba(4, 4, DataType<float>::type);
-  //Mat prueba2(4, 4, DataType<float>::type);
-  prueba.at<float>(0,0)=0.0;
-  prueba.at<float>(0,1)=0.1;
-  prueba.at<float>(0,2)=0.8;
-  prueba.at<float>(0,3)=0.3;
-  prueba.at<float>(1,0)=0.2;
-  prueba.at<float>(1,1)=0.0;
-  prueba.at<float>(1,2)=0.5;
-  prueba.at<float>(1,3)=0.4;
-  prueba.at<float>(2,0)=0.6;
-  prueba.at<float>(2,1)=0.7;
-  prueba.at<float>(2,2)=0.0;
-  prueba.at<float>(2,3)=0.2;
-  prueba.at<float>(3,0)=0.5;
-  prueba.at<float>(3,1)=0.3;
-  prueba.at<float>(3,2)=0.2;
-  prueba.at<float>(3,3)=0.0;
-  //prueba 2
-  // prueba2.at<float>(0,0)=0.0;
-  // prueba2.at<float>(0,1)=1.5;
-  // prueba2.at<float>(0,2)=2.4;
-  // prueba2.at<float>(0,3)=0.5;
-  // prueba2.at<float>(1,0)=1.5;
-  // prueba2.at<float>(1,1)=0.0;
-  // prueba2.at<float>(1,2)=0.8;
-  // prueba2.at<float>(1,3)=2.0;
-  // prueba2.at<float>(2,0)=2.4;
-  // prueba2.at<float>(2,1)=0.8;
-  // prueba2.at<float>(2,2)=0.0;
-  // prueba2.at<float>(2,3)=3.4;
-  // prueba2.at<float>(3,0)=0.5;
-  // prueba2.at<float>(3,1)=2.0;
-  // prueba2.at<float>(3,2)=3.4;
-  // prueba2.at<float>(3,3)=0.0;
+  Mat prueba2(4, 3, DataType<float>::type);
+  prueba.at<float>(0, 0) = 0.0;
+  prueba.at<float>(0, 1) = 0.1;
+  prueba.at<float>(0, 2) = 0.8;
+  prueba.at<float>(0, 3) = 0.3;
+  prueba.at<float>(1, 0) = 0.2;
+  prueba.at<float>(1, 1) = 0.0;
+  prueba.at<float>(1, 2) = 0.5;
+  prueba.at<float>(1, 3) = 0.4;
+  prueba.at<float>(2, 0) = 0.6;
+  prueba.at<float>(2, 1) = 0.7;
+  prueba.at<float>(2, 2) = 0.0;
+  prueba.at<float>(2, 3) = 0.2;
+  prueba.at<float>(3, 0) = 0.5;
+  prueba.at<float>(3, 1) = 0.3;
+  prueba.at<float>(3, 2) = 0.2;
+  prueba.at<float>(3, 3) = 0.0;
+  // prueba 2
+  prueba2.at<float>(0, 0) = 0.0;
+  prueba2.at<float>(0, 1) = 1.0;
+  prueba2.at<float>(0, 2) = 2.0;
 
+  prueba2.at<float>(1, 0) = 2.0;
+  prueba2.at<float>(1, 1) = 0.0;
+  prueba2.at<float>(1, 2) = 1.0;
+
+  prueba2.at<float>(2, 0) = 2.0;
+  prueba2.at<float>(2, 1) = 1.0;
+  prueba2.at<float>(2, 2) = 0.0;
+
+  prueba2.at<float>(3, 0) = 1.0;
+  prueba2.at<float>(3, 1) = 4.0;
+  prueba2.at<float>(3, 2) = 3.0;
 
   SiftFeatureDetector detector(4);
 
@@ -197,20 +212,20 @@ int main(int argc, const char *argv[]){
   imwrite("sift_result.jpg", output);
   drawKeypoints(imgB, keypoints1, output1);
   imwrite("sift_result1.jpg", output);
-  //distancePoints(keypoints1);
-  distanceBetweenImg(descriptorA, descriptorB);
-  //euclidDistance(descriptorA);
-  //euclidDistance(descriptorB);
-  KNN(prueba);
-  //KNN(prueba2);
+  // distancePoints(keypoints1);
+  // distanceBetweenImg(descriptorA, descriptorB);
+  // euclidDistance(descriptorA);
+  // euclidDistance(descriptorB);
+  // KNN(prueba);
+  // KNN(prueba2);
+  indicesIJK(prueba2);
 
-   cout << keypoints.size() << endl;
-   cout << keypoints1.size() << endl;
+  cout << keypoints.size() << endl;
+  cout << keypoints1.size() << endl;
 
   // for (int i = 0; i < keypoints.size(); i++) {
   //   cout << "DescriptorA (" << descriptorA.row(i) << ")" << endl;
   // }
-
 
   return 0;
 }
