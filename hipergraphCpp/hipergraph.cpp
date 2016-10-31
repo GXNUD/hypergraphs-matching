@@ -128,68 +128,51 @@ float KNN(Mat &matEucl) {
   }
 }
 
-// Calcular el triangulo de los indices obtenidos.
-int indicesIJK(Mat &indices) {
-  for (int i = 0; i < indices.rows; i++) {
-    int xi = i;
-    int yi = int(indices.at<float>(i, 0));
-    int xj = i;
-    int yj = int(indices.at<float>(i, 1));
-    int xk = i;
-    int yk = int(indices.at<float>(i, 2));
 
-    cout << "xi"
-         << " " << xi << " "
-         << "yi"
-         << " " << yi << " "
-         << "xj"
-         << " " << xj << " "
-         << "yj"
-         << " " << yj << " "
-         << "xk"
-         << " " << xk << " "
-         << "yk"
-         << " " << yk << endl;
-  }
-}
+void positionXYIJK(Mat &indice, vector<KeyPoint> &point){
+float size = indice.rows*sizeof(float);
+float  *determinant;
+determinant = (float *) malloc(size);
+
+  for (int i = 0; i < indice.rows; i++) {
+      float x1 = point[indice.at<int>(i, 0)].pt.x;
+      float y1 = point[indice.at<int>(i, 0)].pt.y;
+      float x2 = point[indice.at<int>(i, 1)].pt.x;
+      float y2 = point[indice.at<int>(i, 1)].pt.y;
+      float x3 = point[indice.at<int>(i, 2)].pt.x;
+      float y3 = point[indice.at<int>(i, 2)].pt.y;
+      determinant[i] = (x1-x3)*(y2-y3)-(x2-x3)*(y1-y3);
+      cout << determinant[i] << endl;
+		     
+    }
+  free(determinant); 
+
+ }
+
+
 
 int main(int argc, const char *argv[]) {
   const Mat imgA = imread("./house/house.seq0.png", 0); // Load as grayscale
   const Mat imgB = imread("./house/house.seq0.png", 0); // Load as grayscale
-  Mat prueba(4, 4, DataType<float>::type);
+
   Mat prueba2(4, 3, DataType<float>::type);
-  prueba.at<float>(0, 0) = 0.0;
-  prueba.at<float>(0, 1) = 0.1;
-  prueba.at<float>(0, 2) = 0.8;
-  prueba.at<float>(0, 3) = 0.3;
-  prueba.at<float>(1, 0) = 0.2;
-  prueba.at<float>(1, 1) = 0.0;
-  prueba.at<float>(1, 2) = 0.5;
-  prueba.at<float>(1, 3) = 0.4;
-  prueba.at<float>(2, 0) = 0.6;
-  prueba.at<float>(2, 1) = 0.7;
-  prueba.at<float>(2, 2) = 0.0;
-  prueba.at<float>(2, 3) = 0.2;
-  prueba.at<float>(3, 0) = 0.5;
-  prueba.at<float>(3, 1) = 0.3;
-  prueba.at<float>(3, 2) = 0.2;
-  prueba.at<float>(3, 3) = 0.0;
+ 
   // prueba 2
-  prueba2.at<float>(0, 0) = 0.0;
-  prueba2.at<float>(0, 1) = 1.0;
-  prueba2.at<float>(0, 2) = 2.0;
+  prueba2.at<int>(0, 0) = 0;
+  prueba2.at<int>(0, 1) = 1;
+  prueba2.at<int>(0, 2) = 2;
 
-  prueba2.at<float>(1, 0) = 2.0;
-  prueba2.at<float>(1, 1) = 0.0;
-  prueba2.at<float>(1, 2) = 1.0;
+  prueba2.at<int>(1, 0) = 2;
+  prueba2.at<int>(1, 1) = 0;
+  prueba2.at<int>(1, 2) = 1;
 
-  prueba2.at<float>(2, 0) = 2.0;
-  prueba2.at<float>(2, 1) = 1.0;
-  prueba2.at<float>(2, 2) = 0.0;
+  prueba2.at<int>(2, 0) = 2;
+  prueba2.at<int>(2, 1) = 1;
+  prueba2.at<int>(2, 2) = 0;
 
-  prueba2.at<float>(3, 0) = 1.0;
-  prueba2.at<float>(3, 1) = 4.0;
-  prueba2.at<float>(3, 2) = 3.0;
+  prueba2.at<int>(3, 0) = 1;
+  prueba2.at<int>(3, 1) = 4;
+  prueba2.at<int>(3, 2) = 3;
 
   SiftFeatureDetector detector(4);
 
@@ -217,8 +200,8 @@ int main(int argc, const char *argv[]) {
   // euclidDistance(descriptorA);
   // euclidDistance(descriptorB);
   // KNN(prueba);
-  // KNN(prueba2);
-  indicesIJK(prueba2);
+  KNN(prueba2);
+  positionXYIJK(prueba2,keypoints);
 
   cout << keypoints.size() << endl;
   cout << keypoints1.size() << endl;
