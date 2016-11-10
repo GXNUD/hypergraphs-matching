@@ -5,6 +5,8 @@ import cv2
 
 class Hypergraph():
 	def __init__(self, kpts, desc):
+		self.kpts = kpts
+		self.desc = desc
 		self.V = [i for i in xrange(len(kpts))]
 		self.E = self.__getHyperedges(kpts)
 
@@ -13,14 +15,17 @@ class Hypergraph():
 		E = []
 		n = len(kpts)
 		dist = np.zeros((n, n))
+		W = compute_w_parameter(self.kpts)
 		for i, r in enumerate(kpts):
 			for j, l in enumerate(kpts):
 				dist[i][j] = self.__euclideanDistance(r, l)
 				print "{0} {1}".format(i, j)
 				print "dist( ({0}, {1}) ,({2}, {3})) = {4}".format(r.pt[0], r.pt[1], l.pt[0], l.pt[1], dist[i][j])
 		for i, values in enumerate(dist):
-			minA, minB = self.__getMinValues(values, i)
-			E.append((i, minA, minB))
+			minA, minB  = self.__getMinValues(values, i)
+			edge_weigth = hyperedge_weigth((i, minA, minB), W, self.kpts)
+			E.append((i, minA, minB, edge_weigth))
+			print E[i]
 		return E
 
 	def __euclideanDistance(self, kpt1, kpt2):
@@ -105,35 +110,91 @@ def compute_w_parameter(kpts):
 				vi = np.asarray(i.pt)
 				vj = np.asarray(j.pt)
 				vk = np.asarray(k.pt)
-				acum += 1 / sqrt(LA.norm(vi - vk) * LA.norm(vj - vk)) # TODO FIX division
+				if vi.all() != vk.all() and vj.all() != vk.all():
+					acum += 1 / sqrt(LA.norm(vi - vk) * LA.norm(vj - vk)) # TODO FIX division
 	return acum
 
-def hyperedges_similarity(ei, ej, w1, w2, kpts1, kpts2):
-	a = hyperedge_weigth(ei, w1, kpts1)
-	b = hyperedge_weigth(ej, w2, kpts2)
-	sigma = 0.5 # TODO wich is the best sigma
-	S = exp(-( pow(LA.norm(a - b), 2) / sigma )) # TODO does np.norm work correctly?
-	return S
+# def hyperedges_similarity(ei, ej, w1, w2, kpts1, kpts2):
+# 	a = hyperedge_weigth(ei, w1, kpts1)
+# 	b = hyperedge_weigth(ej, w2, kpts2)
+# 	sigma = 0.5 # TODO wich is the best sigma
+# 	S = exp(-( pow(LA.norm(a - b), 2) / sigma )) # TODO does np.norm work correctly?
+# 	return S
 
-def get_Hs(Hgt, Hgr, kpts1, kpts2):
-	'''
-	This matrix is a relation between each
-	hyperedge from Image 1 and each from image 2
-	'''
-	E1, E2 = Hgt.E, Hgr.E
-	n, m = len(E1), len(E2)
-	H = np.zeros((n, m))
-	w1 = compute_w_parameter(kpts1)
-	w2 = compute_w_parameter(kpts2)
-	for i, ei in enumerate(E1):
-		for j, ej in xrange(E2):
-			H[i][j] = hyperedges_similarity(ei, ej, w1, w2, kpts1, kpts2)
-	return H
+# def get_Hs(Hgt, Hgr, kpts1, kpts2):
+# 	'''
+# 	This matrix is a relation between each
+# 	hyperedge from Image 1 and each from image 2
+# 	'''
+# 	E1, E2 = Hgt.E, Hgr.E
+# 	n, m = len(E1), len(E2)
+# 	H = np.zeros((n, m))
+# 	w1 = compute_w_parameter(kpts1)
+# 	w2 = compute_w_parameter(kpts2)
+# 	for i, ei in enumerate(E1):
+# 		for j, ej in xrange(E2):
+# 			H[i][j] = hyperedges_similarity(ei, ej, w1, w2, kpts1, kpts2)
+# 	return H
+
+def draw_edges_match(matches, kp1, kp2, E1, E2, img1, img2):
+	(rows1, cols1) = img1.shape
+	(rows2, cols2) = img2.shape
+	out = np.zeros((max([rows1, rows2]), cols1 + cols2, 3), dtype='uint8')
+	for mat in matches:
+		out[:rows1, :cols1] = np.dstack([img1, img1, img1])
+		out[:rows2, cols1:] = np.dstack([img2, img2, img2])
+		__queryIdx = mat[0]
+		__trainIdx = mat[1]
+
+		(x1_1, y1_1) = kp1[E1[__queryIdx][0]].pt
+		(x2_1, y2_1) = kp1[E1[__queryIdx][1]].pt
+		(x3_1, y3_1) = kp1[E1[__queryIdx][2]].pt
+		(x1_2, y1_2) = kp1[E1[__trainIdx][0]].pt
+		(x2_2, y2_2) = kp1[E1[__trainIdx][1]].pt
+		(x3_2, y3_2) = kp1[E1[__trainIdx][2]].pt
+		cv2.circle(out, (int(x1_1), int(y1_1)), 8, (0, 0, 255), 1)
+		cv2.circle(out, (int(x2_1), int(y2_1)), 8, (0, 0, 255), 1)
+		cv2.circle(out, (int(x3_1), int(y3_1)), 8, (0, 0, 255), 1)
+		cv2.circle(out, (int(x1_2) + cols1, int(y1_2)), 8, (0, 255, 0), 1)
+		cv2.circle(out, (int(x2_2) + cols1, int(y2_2)), 8, (0, 255, 0), 1)
+		cv2.circle(out, (int(x3_2) + cols1, int(y3_2)), 8, (0, 255, 0), 1)
+		# cv2.line(out, (int(x1), int(y1)), (int(x2) + cols1, int(y2)), (102, 255, 255), 1)
+		# cv2.namedWindow('Matching', cv2.WINDOW_NORMAL)
+		cv2.imshow("Matching", out)
+		cv2.waitKey()
+		cv2.destroyWindow("Matching")
+	return out
+
+def match_hyperedges(E1, E2, kpts1, kpts2, img):
+	sigma = 0.01
+	indices_taken = []
+	matches = []
+	for i, e_i in enumerate(E1):
+		best_index_taken = -1
+		max_similarity   = -1
+		for j, e_j in enumerate(E2):
+			similarity = exp(-( pow(LA.norm(e_i[3] - e_j[3]), 2) / sigma ))
+			if similarity > max_similarity and not j in indices_taken:
+				max_similarity = similarity
+				best_index = j
+		matches.append((i, best_index))
+		indices_taken.append(best_index)
+	return matches
+
+# def refine_matches(edge_matches, kpts1, kpts2, E1, E2, dists):
+# 	'''
+# 	edge_matches: first match by hyperedge similarity
+# 	dists: distances between both images points
+# 	'''
+# 	for m_id, match in enumerate(edge_matches):
+# 		for i, node_i in enumerate(E1[match[0]]):
+# 			best
+# 			for j, node_j in enumerate(E2[match[1]]):
 
 if __name__ == "__main__":
-	M = 5
+	M = 100
 	img1 = cv2.imread('./house.seq0.png')
-	img2 = cv2.imread('./house.seq0.png')
+	img2 = cv2.imread('./house.seq27.png')
 	# convert to gray
 	img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 	img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -144,5 +205,7 @@ if __name__ == "__main__":
 	# distances = similarity_descriptors(des1, des2)
 	Hgt = Hypergraph(kpts1, des1)
 	Hgr = Hypergraph(kpts2, des2)
+	matches = match_hyperedges(Hgt.E, Hgr.E, kpts1, kpts2, img1_gray)
 	# Hs = get_Hs(Hgt, Hgr, kpts1, kpts2)
+	draw_edges_match(matches, kpts1, kpts2, Hgt.E, Hgr.E, img1_gray, img2_gray)
 	# Hgt.show_hyperedges()
