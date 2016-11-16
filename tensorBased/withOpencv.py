@@ -8,6 +8,8 @@ np.set_printoptions(precision=3)
 def pow_2(base):
 	return math.pow(base, 2)
 
+################################################################################
+
 def __compareHist(hist1, hist2):
 	n = len(hist1)
 	similarity = math.sqrt(sum(pow_2(hist1[i] - hist2[i]) for i in xrange(n)))
@@ -29,6 +31,8 @@ def getDistancesDes(descriptors):
 			dist[i][j] = dist[j][i] = __compareHist(descriptors[i], descriptors[j])
 	return dist
 
+################################################################################
+
 def getFeatures(img, limit= 10, outname="sample", show=False):
 	'''
 	img should be gray
@@ -48,6 +52,7 @@ def getFeatures(img, limit= 10, outname="sample", show=False):
 	print len(kp)
 	return (kp[:limit], des[:limit]) if len(kp) > limit else (kp, des)
 
+################################################################################
 
 def getMatrixH(distIm1, distIm2, gamma=2):
 	# outfile = open("salidaH", "w")
@@ -106,6 +111,8 @@ def discretize(v, row, col):
 					v[index] = -1
 	return matches
 
+################################################################################
+
 def drawMatches(img1, kp1, img2, kp2, matches, des1, des2):
 	(rows1, cols1) = img1.shape
 	(rows2, cols2) = img2.shape
@@ -130,9 +137,11 @@ def drawMatches(img1, kp1, img2, kp2, matches, des1, des2):
 	cv2.destroyWindow("Matching")
 	return out
 
+################################################################################
+
 def main():
 	img1 = cv2.imread('./house/house.seq80.png')
-	img2 = cv2.imread('./house/house.seq80.rotated.png')
+	img2 = cv2.imread('./house/house.seq85.png')
 	# convert to gray
 	img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 	img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -143,6 +152,8 @@ def main():
 
 	dist1 = getDistancesDes(des1)
 	dist2 = getDistancesDes(des2)
+
+
 	H = getMatrixH(dist1, dist2)
 	eig = getEigenvector(H)
 	# show images
