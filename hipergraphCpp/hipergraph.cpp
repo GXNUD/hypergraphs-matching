@@ -8,32 +8,30 @@
 using namespace cv;
 using namespace std;
 
-// Distancia ecluidinana entre los puntos de una misma imagen usando
-// descriptores
-// double euclidDistance(Mat &vect1){
+// Mat euclidDistance(Mat &vect1){
 // Mat matrixEuclidian(vect1.rows, vect1.rows, DataType<double>::type);
 // for (int i = 0; i <vect1.rows; i++){
 // 	for (int j = 0; j <vect1.rows; j++){
 // 		double sum = 0.0;
 // 		for (int k = 0; k < vect1.cols; k++){
-// 			sum +=((vect1.at<double>(k, i) - vect1.at<double>(k,
-// j))*(vect1.at<double>(k, i) - vect1.at<double>(k, j)));
+// 			sum +=((vect1.at<double>(k, i) - vect1.at<double>(k,j))*(vect1.at<double>(k, i) - vect1.at<double>(k, j)));
 // 		}
 // 		matrixEuclidian.at<double>(i,j) = sqrt(sum);
 // 	}
 // }
-//  // for (int i = 0; i < vect1.rows; i++) {
-//  //    for (int j = 0; j < vect1.rows; j++) {
+//  for (int i = 0; i < vect1.rows; i++) {
+//     for (int j = 0; j < vect1.rows; j++) {
 
-//  //    		 cout << matrixEuclidian.at<double>(j, i) << " ";
-//  //    }
-//  //    cout << endl;
-//   //}
+//     		 cout << matrixEuclidian.at<double>(j, i) << " ";
+//     }
+//     cout << endl;
+//   }
+//   return matrixEuclidian; 
 // }
 
 // //Distancias entre los puntos caracteristicas de una imagen1 usando la
 // posición del punto.
-float distancePoints(vector<KeyPoint> &point) {
+Mat distancePoints(vector<KeyPoint> &point) {
   int n = point.size();
   Mat matrixEuclidian(n, n, DataType<float>::type),
       matrixEuclidianSort(n, n, DataType<int>::type);
@@ -64,41 +62,49 @@ float distancePoints(vector<KeyPoint> &point) {
   //     }
   //     cout << endl;
   // }
+  return matrixEuclidian;
 }
 
-// distancia del arcoseno.
-float distanceBetweenImg(Mat &vec1, Mat &vec2) {
-  Mat angulo(vec1.rows, vec2.rows, DataType<float>::type);
+/*
+  sen(theta) = V1 dot V2 / |V1| * |V2|, ésta es una medida de similaridad entre
+  descriptores de dos puntos, entre mayor sea el valor de similarity, más parecidos
+  son los descriptores. El calculo se hace para cada pareja entre los puntos de las
+  dos imagenes.
+*/
+Mat distanceBetweenImg(Mat &vec1, Mat &vec2) {
+  Mat similarity(vec1.rows, vec2.rows, DataType<float>::type);
   for (int i = 0; i < vec1.rows; i++) {
     for (int j = 0; j < vec2.rows; j++) {
       float producto = 0.0;
       float norma1 = 0.0;
       float norma2 = 0.0;
       for (int k = 0; k < vec1.cols; k++) {
-        norma1 += vec1.at<float>(k, i) * vec1.at<float>(k, i);
-        norma2 += vec2.at<float>(k, j) * vec2.at<float>(k, j);
-        producto += (vec1.at<float>(k, i) * vec2.at<float>(k, j));
+        norma1 += vec1.at<float>(i, k)*vec1.at<float>(i, k);
+        norma2 += vec2.at<float>(j, k)*vec2.at<float>(j, k);
+        producto += (vec1.at<float>(i, k) * vec2.at<float>(j, k));
       }
 
-      angulo.at<float>(i, j) = (producto / ((sqrt(norma1) * sqrt(norma2))));
+      similarity.at<float>(i, j) = (producto / ((sqrt(norma1) * sqrt(norma2))));
     }
   }
+   
+ 
 
-  // for (int i = 0; i < 10; i++) {
-  //    for (int j = 0; j < 10; j++) {
-  //    	//if (angulo.at<double>(i,j)> 0.5000000)
-  //    	//{
-  //    		 cout << angulo.at<float>(j, i) << " ";
-  //    	//}
-  //    }
-  //    cout << endl;
-  // }
+  for (int i = 0; i < 4; i++) {
+     for (int j = 0; j < 4; j++) {
+     	//if (similarity.at<float>(i,j)> 0.5000000) {
+     		 cout << similarity.at<float>(i, j) << " ";
+     	//}
+     }
+     cout << endl;
+  }
+   return similarity; 
 }
 
 /*Algoritmo de los k vecinos más cercanos, esto nos permitira conocer
 los indices de la matrix de los vecinos más cercanos,
 para hacer el hipergrafo de la img1 como de img2 */
-float KNN(Mat &matEucl) {
+Mat KNN(Mat &matEucl) {
   Mat indices(matEucl.rows, 3, DataType<int>::type);
   float minDist = 10e6;
   int minIdx1 = -1;
@@ -119,20 +125,22 @@ float KNN(Mat &matEucl) {
       }
       // como guardar los indices en una Matriz de N por 3;
     }
-    cout << "index0" << i << " "
-         << "indice1" << minIdx1 << " "
-         << "indice2" << minIdx2 << endl;
+    cout << "index0  " << i << " "
+         << "indice1 " << minIdx1 << " "
+         << "indice2 " << minIdx2 << endl;
+
     indices.at<int>(i, 0) = i;
     indices.at<int>(i, 1) = minIdx1;
     indices.at<int>(i, 2) = minIdx2;
   }
+  return indices; 
 }
 
 
-void positionXYIJK(Mat &indice, vector<KeyPoint> &point){
-float size = indice.rows*sizeof(float);
-float  *determinant;
-determinant = (float *) malloc(size);
+float positionXYIJK(Mat &indice, vector<KeyPoint> &point){
+	float size = indice.rows*sizeof(float);
+	float  *determinant;
+	determinant = (float *) malloc(size);
 
   for (int i = 0; i < indice.rows; i++) {
       float x1 = point[indice.at<int>(i, 0)].pt.x;
@@ -145,9 +153,26 @@ determinant = (float *) malloc(size);
       cout << determinant[i] << endl;
 		     
     }
-  free(determinant); 
+
+  return *determinant; 
 
  }
+
+
+ //Mat funtionSimilarity(float &vector1, float &vector2){
+ // 	float *similarity; 
+ // 	for (int i = 0; i < 4; ++i)
+ // 	{
+ // 		for (int j = 0; j < 4; ++j)
+ // 		{
+ // 			similarity[i] = exp(vector1[i]-vector2[j]);
+
+ // 		}
+ // 		cout << similarity[i] << endl;
+ // 	}
+ // 	free(similarity);
+
+ // }
 
 
 
@@ -155,60 +180,55 @@ int main(int argc, const char *argv[]) {
   const Mat imgA = imread("./house/house.seq0.png", 0); // Load as grayscale
   const Mat imgB = imread("./house/house.seq0.png", 0); // Load as grayscale
 
-  Mat prueba2(4, 3, DataType<float>::type);
- 
-  // prueba 2
-  prueba2.at<int>(0, 0) = 0;
-  prueba2.at<int>(0, 1) = 1;
-  prueba2.at<int>(0, 2) = 2;
-
-  prueba2.at<int>(1, 0) = 2;
-  prueba2.at<int>(1, 1) = 0;
-  prueba2.at<int>(1, 2) = 1;
-
-  prueba2.at<int>(2, 0) = 2;
-  prueba2.at<int>(2, 1) = 1;
-  prueba2.at<int>(2, 2) = 0;
-
-  prueba2.at<int>(3, 0) = 1;
-  prueba2.at<int>(3, 1) = 4;
-  prueba2.at<int>(3, 2) = 3;
-
   SiftFeatureDetector detector(4);
-
   vector<KeyPoint> keypoints;
   vector<KeyPoint> keypoints1;
   detector.detect(imgA, keypoints);
   detector.detect(imgB, keypoints1);
   Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create("SIFT");
-
   Mat descriptorA, descriptorB;
-
   descriptor->compute(imgA, keypoints, descriptorA);
   descriptor->compute(imgB, keypoints1, descriptorB);
-
   // Add results to image and save.
   Mat output1;
   Mat output;
-
   drawKeypoints(imgA, keypoints, output);
   imwrite("sift_result.jpg", output);
   drawKeypoints(imgB, keypoints1, output1);
-  imwrite("sift_result1.jpg", output);
-  // distancePoints(keypoints1);
-  // distanceBetweenImg(descriptorA, descriptorB);
-  // euclidDistance(descriptorA);
-  // euclidDistance(descriptorB);
-  // KNN(prueba);
-  KNN(prueba2);
-  positionXYIJK(prueba2,keypoints);
+  imwrite("sift_result1.jpg", output1);
+  Mat dist1 = distancePoints(keypoints);
+  Mat dist2 = distancePoints(keypoints1);
+  Mat similarity = distanceBetweenImg(descriptorA, descriptorB);
+  //euclidDistance(descriptorA);
+  //euclidDistance(descriptorB);
+  Mat hipergrafo1 = KNN(dist1);
+  Mat hipergrafo2 = KNN(dist2);
+
+  //float  *det1;
+  //float  *det2;
+
+  //float size = hipergrafo1.rows*sizeof(float);
+  //float size2 = hipergrafo2.rows*sizeof(float);
+
+  //det1 = (float *) malloc(size);
+  //det2 = (float *) malloc(size2);
+
+
+  //det1 = 
+  positionXYIJK(hipergrafo1,keypoints);
+  //det2 = 
+  positionXYIJK(hipergrafo2,keypoints1);
+  //funtionSimilarity(vec1,vec2); 
 
   cout << keypoints.size() << endl;
   cout << keypoints1.size() << endl;
 
+
   // for (int i = 0; i < keypoints.size(); i++) {
   //   cout << "DescriptorA (" << descriptorA.row(i) << ")" << endl;
   // }
+  //free(det1);
+  //free(det2);
 
   return 0;
 }
