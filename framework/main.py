@@ -1,7 +1,6 @@
 from math import sqrt, pow, exp
 import numpy as np
 from numpy import linalg as LA
-import matplotlib.pyplot as plt
 import cv2
 import itertools
 
@@ -68,8 +67,8 @@ def get_features(img, limit=10, outname="sample.jpg", show=False):
     '''
         img should be gray
     '''
-    detector = cv2.FeatureDetector_create('ORB')
-    descriptor = cv2.DescriptorExtractor_create('ORB')
+    detector = cv2.FeatureDetector_create('SURF')
+    descriptor = cv2.DescriptorExtractor_create('SURF')
     kp = detector.detect(img)
     # getting most relevant points
     kp = sorted(kp, key=lambda x: x.response, reverse=True)
@@ -172,19 +171,19 @@ def similarity_angles(e1, e2, kpts1, kpts2, sigma=0.5):
     angles1 and angles2 are those formed by the first and second triangle,
     respecvitly, we'll choose the best case scenario for the sum of sin
     '''
+    print "\n\n# =========================================================== #"
     sin1 = get_angles_sin(e1, kpts1)
     sin2 = get_angles_sin(e2, kpts2)
 
     perms = itertools.permutations(sin1)
     diffs = [sum(np.abs(np.subtract(s, sin2))) for s in perms]
-    sum_diff_between_sin = min(diffs)
-    similarity = exp(-sum_diff_between_sin / sigma)
+    min_diff_between_sin = min(diffs)
+    similarity = exp(-min_diff_between_sin / sigma)
 
-    print "\n\n# =========================================================== #"
     print "sin 1: {}".format(sin1)
     print "sin 2: {}".format(sin2)
     print
-    print "sum_diff_between_sin: {}".format(sum_diff_between_sin)
+    print "sum_diff_between_sin: {}".format(min_diff_between_sin)
     print "similarity: {}".format(similarity)
 
     return similarity
@@ -196,19 +195,20 @@ def match_hyperedges(E1, E2, kpts1, kpts2):
     '''
     E1, E2: hyperedges lists of img1 and img2, respectly
     '''
-    sigma = 0.01
+    sigma = 0.5
     indices_taken = []
     matches = []
     for i, e_i in enumerate(E1):
         best_index = -1
         max_similarity = -1
         for j, e_j in enumerate(E2):
-            # similarity = exp(-( pow(LA.norm(e_i[3] - e_j[3]), 2) / sigma ))
-            similarity = similarity_angles(e_j, e_i, kpts1, kpts2, sigma)
-            if similarity > max_similarity and j not in indices_taken:
-                max_similarity = similarity
-                best_index = j
-        matches.append((i, best_index))
+            if j not in indices_taken:
+                # similarity = exp(-(pow(LA.norm(e_i[3] - e_j[3]), 2) / sigma))
+                similarity = similarity_angles(e_i, e_j, kpts1, kpts2, sigma)
+                if similarity > max_similarity:
+                    max_similarity = similarity
+                    best_index = j
+        matches.append((i, best_index, max_similarity))
         indices_taken.append(best_index)
     return matches
 
@@ -252,9 +252,12 @@ def draw_edges_match(matches, kp1, kp2, E1, E2, img1, img2):
         print (x1_1, y1_1)
         print (x2_1, y2_1)
         print (x3_1, y3_1)
+        print
         print (x1_2, y1_2)
         print (x2_2, y2_2)
         print (x3_2, y3_2)
+        print
+        print "similarity: {}".format(mat[2])
         # cv2.line(out, (int(x1), int(y1)), (int(x2) + cols1, int(y2)),
         # (102, 255, 255), 1)
         # cv2.namedWindow('Matching', cv2.WINDOW_NORMAL)
@@ -264,16 +267,10 @@ def draw_edges_match(matches, kp1, kp2, E1, E2, img1, img2):
     return out
 
 
-# def delete_copies(K, des):
-#     s = set()
-#     for i, k, d in enumerate(K, des):
-#
-
-
 if __name__ == "__main__":
     M = 15
     img1 = cv2.imread('./house.seq0.png')
-    img2 = cv2.imread('./house.seq27.png')
+    img2 = cv2.imread('./house.seq0.trans.png')
     # convert to gray
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
