@@ -10,30 +10,33 @@ using namespace std;
 
 // Distancia ecluidinana entre los puntos de una misma imagen usando
 // descriptores
-// double euclidDistance(Mat &vect1){
-// Mat matrixEuclidian(vect1.rows, vect1.rows, DataType<double>::type);
-// for (int i = 0; i <vect1.rows; i++){
-// 	for (int j = 0; j <vect1.rows; j++){
-// 		double sum = 0.0;
-// 		for (int k = 0; k < vect1.cols; k++){
-// 			sum +=((vect1.at<double>(k, i) - vect1.at<double>(k,
-// j))*(vect1.at<double>(k, i) - vect1.at<double>(k, j)));
-// 		}
-// 		matrixEuclidian.at<double>(i,j) = sqrt(sum);
-// 	}
-// }
-//  // for (int i = 0; i < vect1.rows; i++) {
-//  //    for (int j = 0; j < vect1.rows; j++) {
-
-//  //    		 cout << matrixEuclidian.at<double>(j, i) << " ";
-//  //    }
-//  //    cout << endl;
-//   //}
-// }
+Mat euclidDistance(Mat &vect1) {
+  Mat matrixEuclidian(vect1.rows, vect1.rows, DataType<double>::type);
+  for (int i = 0; i < vect1.rows; i++){
+    for (int j = 0; j < vect1.rows; j++){
+      double sum = 0.0;
+      for (int k = 0; k < vect1.cols; k++){
+        double e_i = vect1.at<double>(k, i);
+        double e_j = vect1.at<double>(k, j);
+        cout << e_i << " " << e_j << " : " << ((e_i - e_j) * (e_i - e_j)) << endl;
+        sum += ((e_i - e_j) * (e_i - e_j));
+      }
+      matrixEuclidian.at<double>(i,j) = sqrt(sum);
+    }
+  }
+  cout << "Distancias en la función" << endl;
+  for (int i = 0; i < vect1.rows; i++) {
+    for (int j = 0; j < vect1.rows; j++) {
+      cout << matrixEuclidian.at<double>(i, j) << " ";
+    }
+    cout << endl;
+  }
+  return matrixEuclidian;
+}
 
 // //Distancias entre los puntos caracteristicas de una imagen1 usando la
 // posición del punto.
-float distancePoints(vector<KeyPoint> &point) {
+Mat distancePoints(vector<KeyPoint> &point) {
   int n = point.size();
   Mat matrixEuclidian(n, n, DataType<float>::type),
       matrixEuclidianSort(n, n, DataType<int>::type);
@@ -49,26 +52,25 @@ float distancePoints(vector<KeyPoint> &point) {
   }
   // cv::sortIdx(matrixEuclidian, matrixEuclidianSort , CV_SORT_ASCENDING);
 
-  for (int i = 0; i < 10; i++) {
-    for (int j = 0; j < 10; j++) {
-
-      cout << matrixEuclidian.at<float>(i, j) << " ";
-    }
-    cout << endl;
-  }
+  // for (int i = 0; i < n; i++) {
+  //   for (int j = 0; j < n; j++) {
+  //     cout << matrixEuclidian.at<float>(i, j) << " ";
+  //   }
+  //   cout << endl;
+  // }
   // cout<<"ordenado" <<endl;
   // for (int i = 0; i < 10; i++) {
-  //    	for (int j = 0; j < 10; j++) {
-
-  //    		 cout << matrixEuclidianSort.at<int>(i,j) << " ";
-  //     }
-  //     cout << endl;
+  //   for (int j = 0; j < 10; j++) {
+  //     cout << matrixEuclidianSort.at<int>(i,j) << " ";
+  //   }
+  //   cout << endl;
   // }
+  return matrixEuclidian;
 }
 
 // distancia del arcoseno.
-float distanceBetweenImg(Mat &vec1, Mat &vec2) {
-  Mat angulo(vec1.rows, vec2.rows, DataType<float>::type);
+Mat distanceBetweenImg(Mat &vec1, Mat &vec2) {
+  Mat similarity(vec1.rows, vec2.rows, DataType<float>::type);
   for (int i = 0; i < vec1.rows; i++) {
     for (int j = 0; j < vec2.rows; j++) {
       float producto = 0.0;
@@ -79,26 +81,25 @@ float distanceBetweenImg(Mat &vec1, Mat &vec2) {
         norma2 += vec2.at<float>(k, j) * vec2.at<float>(k, j);
         producto += (vec1.at<float>(k, i) * vec2.at<float>(k, j));
       }
-
-      angulo.at<float>(i, j) = (producto / ((sqrt(norma1) * sqrt(norma2))));
+      similarity.at<float>(i, j) = (producto / ((sqrt(norma1) * sqrt(norma2))));
     }
   }
 
   // for (int i = 0; i < 10; i++) {
-  //    for (int j = 0; j < 10; j++) {
-  //    	//if (angulo.at<double>(i,j)> 0.5000000)
-  //    	//{
-  //    		 cout << angulo.at<float>(j, i) << " ";
-  //    	//}
-  //    }
-  //    cout << endl;
+  //   for (int j = 0; j < 10; j++) {
+  //     if (similarity.at<double>(i,j)> 0.5000000) {
+  //       cout << similarity.at<float>(j, i) << " ";
+  //     }
+  //   }
+  //   cout << endl;
   // }
+  return similarity;
 }
 
 /*Algoritmo de los k vecinos más cercanos, esto nos permitira conocer
 los indices de la matrix de los vecinos más cercanos,
 para hacer el hipergrafo de la img1 como de img2 */
-float KNN(Mat &matEucl) {
+Mat KNN(Mat &matEucl) {
   Mat indices(matEucl.rows, 3, DataType<int>::type);
   float minDist = 10e6;
   int minIdx1 = -1;
@@ -119,13 +120,14 @@ float KNN(Mat &matEucl) {
       }
       // como guardar los indices en una Matriz de N por 3;
     }
-    cout << "index0" << i << " "
-         << "indice1" << minIdx1 << " "
-         << "indice2" << minIdx2 << endl;
+    cout << "Indice0: " << i << " "
+         << "indice1: " << minIdx1 << " "
+         << "indice2: " << minIdx2 << endl;
     indices.at<int>(i, 0) = i;
     indices.at<int>(i, 1) = minIdx1;
     indices.at<int>(i, 2) = minIdx2;
   }
+  return indices;
 }
 
 
@@ -142,12 +144,15 @@ determinant = (float *) malloc(size);
       float x3 = point[indice.at<int>(i, 2)].pt.x;
       float y3 = point[indice.at<int>(i, 2)].pt.y;
       determinant[i] = (x1-x3)*(y2-y3)-(x2-x3)*(y1-y3);
+      cout << "V1: " << x1 << ", " << y1 << endl;
+      cout << "V2: " << x2 << ", " << y2 << endl;
+      cout << "V3: " << x3 << ", " << y3 << endl;
       cout << determinant[i] << endl;
-		     
-    }
-  free(determinant); 
 
- }
+    }
+  free(determinant);
+
+}
 
 
 
@@ -155,56 +160,85 @@ int main(int argc, const char *argv[]) {
   const Mat imgA = imread("./house/house.seq0.png", 0); // Load as grayscale
   const Mat imgB = imread("./house/house.seq0.png", 0); // Load as grayscale
 
-  Mat prueba2(4, 3, DataType<float>::type);
- 
+  // Mat prueba2(4, 3, DataType<float>::type);
+
   // prueba 2
-  prueba2.at<int>(0, 0) = 0;
-  prueba2.at<int>(0, 1) = 1;
-  prueba2.at<int>(0, 2) = 2;
-
-  prueba2.at<int>(1, 0) = 2;
-  prueba2.at<int>(1, 1) = 0;
-  prueba2.at<int>(1, 2) = 1;
-
-  prueba2.at<int>(2, 0) = 2;
-  prueba2.at<int>(2, 1) = 1;
-  prueba2.at<int>(2, 2) = 0;
-
-  prueba2.at<int>(3, 0) = 1;
-  prueba2.at<int>(3, 1) = 4;
-  prueba2.at<int>(3, 2) = 3;
+  // prueba2.at<int>(0, 0) = 0;
+  // prueba2.at<int>(0, 1) = 1;
+  // prueba2.at<int>(0, 2) = 2;
+  //
+  // prueba2.at<int>(1, 0) = 2;
+  // prueba2.at<int>(1, 1) = 0;
+  // prueba2.at<int>(1, 2) = 1;
+  //
+  // prueba2.at<int>(2, 0) = 2;
+  // prueba2.at<int>(2, 1) = 1;
+  // prueba2.at<int>(2, 2) = 0;
+  //
+  // prueba2.at<int>(3, 0) = 1;
+  // prueba2.at<int>(3, 1) = 4;
+  // prueba2.at<int>(3, 2) = 3;
 
   SiftFeatureDetector detector(4);
 
-  vector<KeyPoint> keypoints;
   vector<KeyPoint> keypoints1;
-  detector.detect(imgA, keypoints);
-  detector.detect(imgB, keypoints1);
+  vector<KeyPoint> keypoints2;
+  detector.detect(imgA, keypoints1);
+  detector.detect(imgB, keypoints2);
   Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create("SIFT");
 
   Mat descriptorA, descriptorB;
 
-  descriptor->compute(imgA, keypoints, descriptorA);
-  descriptor->compute(imgB, keypoints1, descriptorB);
-
+  descriptor->compute(imgA, keypoints1, descriptorA);
+  descriptor->compute(imgB, keypoints2, descriptorB);
+  // cout << "Descriptor size " << descriptorA.cols << endl;
+  // for (int i = 0; i < descriptorA.cols; i++) {
+  //   cout << "Index " << i << ": "<< descriptorA.at<double>(0, i) << endl;
+  // }
+  // cout << endl;
   // Add results to image and save.
   Mat output1;
-  Mat output;
+  Mat output2;
 
-  drawKeypoints(imgA, keypoints, output);
-  imwrite("sift_result.jpg", output);
-  drawKeypoints(imgB, keypoints1, output1);
-  imwrite("sift_result1.jpg", output);
-  // distancePoints(keypoints1);
-  // distanceBetweenImg(descriptorA, descriptorB);
-  // euclidDistance(descriptorA);
+  drawKeypoints(imgA, keypoints1, output1);
+  imwrite("sift_result.jpg", output1);
+  drawKeypoints(imgB, keypoints2, output2);
+  imwrite("sift_result1.jpg", output2);
+  Mat dist1 = distancePoints(keypoints1);
+  // for (int i = 0; i < dist1.rows; i++) {
+  //   for (int j = 0; j < dist1.cols; j++) {
+  //     cout << "Dist " << i << " and " << j << ": " << dist1.at<double>(i, j) << endl;
+  //   }
+  // }
+  Mat dist2 = distancePoints(keypoints2);
+  // cout << endl << "Distance second image" << endl;
+  // for (int i = 0; i < dist2.rows; i++) {
+  //   for (int j = 0; j < dist2.cols; j++) {
+  //     cout << "Dist " << i << " and " << j << ": " << dist2.at<double>(i, j) << endl;
+  //   }
+  // }
+  Mat matSimilarity = distanceBetweenImg(descriptorA, descriptorB);
+  for (int i = 0; i < matSimilarity.rows; i++) {
+    for (int j = 0; j < matSimilarity.cols; j++) {
+      cout << "Similarity " << i << " and " << j << ": " << matSimilarity.at<double>(i, j) << endl;
+    }
+  }
+  // Mat dist1 = euclidDistance(descriptorA);
+  // for (int i = 0; i < dist1.rows; i++) {
+  //   for (int j = 0; j < dist1.cols; j++) {
+  //     cout << dist1.at<double>(i, j) << " ";
+  //   }
+  //   cout << endl;
+  // }
   // euclidDistance(descriptorB);
   // KNN(prueba);
-  KNN(prueba2);
-  positionXYIJK(prueba2,keypoints);
-
-  cout << keypoints.size() << endl;
-  cout << keypoints1.size() << endl;
+  // Mat prueba2(keypoints.size(), 3, DataType<float>::type);
+  // Mat Edges1 = KNN(dist1);
+  // Mat Edges2 = KNN(dist2);
+  // positionXYIJK(prueba2,keypoints);
+  //
+  // cout << keypoints.size() << endl;
+  // cout << keypoints1.size() << endl;
 
   // for (int i = 0; i < keypoints.size(); i++) {
   //   cout << "DescriptorA (" << descriptorA.row(i) << ")" << endl;
