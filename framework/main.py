@@ -17,6 +17,7 @@ class Hypergraph():
         self.size = len(kpts)
         self.V = [i for i in xrange(len(kpts))]
         self.E = self.__getHyperedges(kpts)
+        # self.E = self.__getBfHyperedges()
 
     def __getHyperedges(self, kpts):
         '''
@@ -41,6 +42,9 @@ class Hypergraph():
         triangulation = tri.Triangulation(x, y)
 
         return triangulation.get_masked_triangles()
+
+    def __getBfHyperedges(self):
+        return list(itertools.combinations(range(self.size), 3))
 
     def __euclideanDistance(self, kpt1, kpt2):
         return sqrt(
@@ -395,9 +399,9 @@ def draw_triangulation(kp, E, img):
 
 
 if __name__ == "__main__":
-    M = 100
-    img1 = cv2.imread('./ori.jpg')
-    img2 = cv2.imread('./ori.rot.jpg')
+    M = 10
+    img1 = cv2.imread('./house.seq0.png')
+    img2 = cv2.imread('./house.seq27.png')
     # convert to gray
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -409,11 +413,12 @@ if __name__ == "__main__":
     # distances = similarity_descriptors(des1, des2)
     Hgt = Hypergraph(kpts1, des1)
     Hgr = Hypergraph(kpts2, des2)
-
+    print "Hypergraph construction done"
     # matching
     edge_matches = match_hyperedges(
         Hgt.E, Hgr.E, kpts1, kpts2, des1, des2, 15, 5, 10, 0.85
     )
+    print "Hyperedges matching done"
 
     point_matches = match_points(edge_matches, des1, des2, Hgt.E, Hgr.E)
     # show results
