@@ -69,7 +69,12 @@ Mat distancePoints(vector<KeyPoint> &point) {
   return matrixEuclidian;
 }
 
-// distancia del arcoseno.
+/*
+  sen(theta) = V1 dot V2 / |V1| * |V2|, ésta es una medida de similaridad entre
+  descriptores de dos puntos, entre mayor sea el valor de similarity, más parecidos
+  son los descriptores. El calculo se hace para cada pareja entre los puntos de las
+  dos imagenes.
+*/
 Mat distanceBetweenImg(Mat &vec1, Mat &vec2) {
   Mat similarity(vec1.rows, vec2.rows, DataType<float>::type);
   for (int i = 0; i < vec1.rows; i++) {
@@ -78,14 +83,14 @@ Mat distanceBetweenImg(Mat &vec1, Mat &vec2) {
       float norma1 = 0.0;
       float norma2 = 0.0;
       for (int k = 0; k < vec1.cols; k++) {
-        norma1 += vec1.at<float>(k, i) * vec1.at<float>(k, i);
-        norma2 += vec2.at<float>(k, j) * vec2.at<float>(k, j);
-        producto += (vec1.at<float>(k, i) * vec2.at<float>(k, j));
+        norma1 += vec1.at<float>(i, k)*vec1.at<float>(i, k);
+        norma2 += vec2.at<float>(j, k)*vec2.at<float>(j, k);
+        producto += (vec1.at<float>(i, k) * vec2.at<float>(j, k));
       }
+
       similarity.at<float>(i, j) = (producto / ((sqrt(norma1) * sqrt(norma2))));
     }
   }
-
   // for (int i = 0; i < 10; i++) {
   //   for (int j = 0; j < 10; j++) {
   //     if (similarity.at<double>(i,j)> 0.5000000) {
@@ -97,9 +102,11 @@ Mat distanceBetweenImg(Mat &vec1, Mat &vec2) {
   return similarity;
 }
 
-/*Algoritmo de los k vecinos más cercanos, esto nos permitira conocer
-los indices de la matrix de los vecinos más cercanos,
-para hacer el hipergrafo de la img1 como de img2 */
+/*
+* Algoritmo de los k vecinos más cercanos, esto nos permitira conocer
+* los indices de la matrix de los vecinos más cercanos,
+* para hacer el hipergrafo de la img1 como de img2
+*/
 Mat KNN(Mat &matEucl) {
   Mat indices(matEucl.rows, 3, DataType<int>::type);
   float minDist = 10e6;
@@ -108,7 +115,6 @@ Mat KNN(Mat &matEucl) {
   for (int i = 0; i < matEucl.rows; i++) {
     for (int j = 0; j < matEucl.cols; j++) {
       if ((matEucl.at<float>(i, j) <= minDist) && (j != i)) {
-
         minDist = matEucl.at<float>(i, j);
         minIdx1 = j;
       }
@@ -119,7 +125,6 @@ Mat KNN(Mat &matEucl) {
         minDist = matEucl.at<float>(i, j);
         minIdx2 = j;
       }
-      // como guardar los indices en una Matriz de N por 3;
     }
     cout << "Indice0: " << i << " "
          << "indice1: " << minIdx1 << " "
@@ -225,7 +230,7 @@ vector< vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
       rect_count_outliers++;
     }
   }
-  
+
   cout << "[delaunayTriangulation] ";
   cout << "Size of input KeyPoints " << kpts.size() << endl;
   cout << "[delaunayTriangulation] ";
@@ -254,27 +259,28 @@ vector< vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
 }
 
 
-void positionXYIJK(Mat &indice, vector<KeyPoint> &point){
-  float size = indice.rows*sizeof(float);
-  float  *determinant;
-  determinant = (float *) malloc(size);
-
-  for (int i = 0; i < indice.rows; i++) {
-      float x1 = point[indice.at<int>(i, 0)].pt.x;
-      float y1 = point[indice.at<int>(i, 0)].pt.y;
-      float x2 = point[indice.at<int>(i, 1)].pt.x;
-      float y2 = point[indice.at<int>(i, 1)].pt.y;
-      float x3 = point[indice.at<int>(i, 2)].pt.x;
-      float y3 = point[indice.at<int>(i, 2)].pt.y;
-      determinant[i] = (x1-x3)*(y2-y3)-(x2-x3)*(y1-y3);
-      cout << "V1: " << x1 << ", " << y1 << endl;
-      cout << "V2: " << x2 << ", " << y2 << endl;
-      cout << "V3: " << x3 << ", " << y3 << endl;
-      cout << determinant[i] << endl;
-
-    }
-  free(determinant);
-}
+// float positionXYIJK(Mat &indice, vector<KeyPoint> &point){
+//   float size = indice.rows*sizeof(float);
+//   float  *determinant;
+//   determinant = (float *) malloc(size);
+//
+//   for (int i = 0; i < indice.rows; i++) {
+//       float x1 = point[indice.at<int>(i, 0)].pt.x;
+//       float y1 = point[indice.at<int>(i, 0)].pt.y;
+//       float x2 = point[indice.at<int>(i, 1)].pt.x;
+//       float y2 = point[indice.at<int>(i, 1)].pt.y;
+//       float x3 = point[indice.at<int>(i, 2)].pt.x;
+//       float y3 = point[indice.at<int>(i, 2)].pt.y;
+//       determinant[i] = (x1-x3)*(y2-y3)-(x2-x3)*(y1-y3);
+//       cout << "V1: " << x1 << ", " << y1 << endl;
+//       cout << "V2: " << x2 << ", " << y2 << endl;
+//       cout << "V3: " << x3 << ", " << y3 << endl;
+//       cout << determinant[i] << endl;
+//
+//     }
+//   return *determinant;
+//   free(determinant);
+// }
 
 int main(int argc, const char *argv[]) {
   const Mat img1 = imread("./house/house.seq0.png", 0); // Load as grayscale
@@ -286,7 +292,7 @@ int main(int argc, const char *argv[]) {
   vector<KeyPoint> keypoints2;
   detector.detect(img1, keypoints1);
   detector.detect(img2, keypoints2);
-  Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create("SIFT");
+  Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create("SURF");
 
   Mat descriptor1, descriptor2;
 
@@ -307,7 +313,6 @@ int main(int argc, const char *argv[]) {
 
   // build hyperedges vector
   vector<vector<int> > Edges1 = delaunayTriangulation(img1, keypoints1);
-  cout << "Edges1 has: " << Edges1.size() << " elements" << endl;
   // Mat Edges1 = KNN(dist1);
   // Mat Edges2 = KNN(dist2);
 
@@ -334,10 +339,4 @@ int main(int argc, const char *argv[]) {
   // KNN(prueba);
   // Mat prueba2(keypoints.size(), 3, DataType<float>::type);
   // positionXYIJK(prueba2,keypoints);
-
-  // for (int i = 0; i < keypoints.size(); i++) {
-  //   cout << "DescriptorA (" << descriptor1.row(i) << ")" << endl;
-  // }
-
-  return 0;
 }
