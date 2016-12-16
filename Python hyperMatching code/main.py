@@ -401,7 +401,7 @@ def draw_triangulation(kp, E, img):
 if __name__ == "__main__":
     M = 10
     img1 = cv2.imread('./house.seq0.png')
-    img2 = cv2.imread('./house.seq27.png')
+    img2 = cv2.imread('./house.seq0.trans.png')
     # convert to gray
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -425,4 +425,4 @@ if __name__ == "__main__":
     draw_edges_match(
        edge_matches, kpts1, kpts2, Hgt.E, Hgr.E, img1_gray, img2_gray
     )
-    # draw_points_match(point_matches, kpts1, kpts2, img1_gray, img2_gray)
+    draw_points_match(point_matches, kpts1, kpts2, img1_gray, img2_gray)
