@@ -4,6 +4,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/nonfree/features2d.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 using namespace cv;
 using namespace std;
@@ -130,11 +131,133 @@ Mat KNN(Mat &matEucl) {
   return indices;
 }
 
+/*
+########  ########     ###    ##      ## #### ##    ##  ######
+##     ## ##     ##   ## ##   ##  ##  ##  ##  ###   ## ##    ##
+##     ## ##     ##  ##   ##  ##  ##  ##  ##  ####  ## ##
+##     ## ########  ##     ## ##  ##  ##  ##  ## ## ## ##   ####
+##     ## ##   ##   ######### ##  ##  ##  ##  ##  #### ##    ##
+##     ## ##    ##  ##     ## ##  ##  ##  ##  ##   ### ##    ##
+########  ##     ## ##     ##  ###  ###  #### ##    ##  ######
+*/
+
+void drawDelaunay(Mat &img, vector<Vec6f> &triangleList) {
+  Scalar delaunay_color(255,255,255);
+  vector<Point> pt(3);
+  Size size = img.size();
+  Rect rect(0, 0, size.width, size.height);
+  int count_outliers = 0;
+  for( size_t i = 0; i < triangleList.size(); i++ ) {
+    Vec6f t = triangleList[i];
+    pt[0] = Point(cvRound(t[0]), cvRound(t[1]));
+    pt[1] = Point(cvRound(t[2]), cvRound(t[3]));
+    pt[2] = Point(cvRound(t[4]), cvRound(t[5]));
+
+    // Draw rectangles completely inside the image.
+    if (rect.contains(pt[0]) && rect.contains(pt[1]) && rect.contains(pt[2])) {
+      line(img, pt[0], pt[1], delaunay_color, 1, CV_AA, 0);
+      line(img, pt[1], pt[2], delaunay_color, 1, CV_AA, 0);
+      line(img, pt[2], pt[0], delaunay_color, 1, CV_AA, 0);
+    } else {
+      count_outliers++;
+    }
+  }
+  cout << "[drawDelaunay] " <<count_outliers << " points are not in rect" << endl;
+  imshow("Delaunay Triangulation", img);
+  waitKey(0);
+}
+
+/*
+######## ########   ######   ########  ######
+##       ##     ## ##    ##  ##       ##    ##
+##       ##     ## ##        ##       ##
+######   ##     ## ##   #### ######    ######
+##       ##     ## ##    ##  ##             ##
+##       ##     ## ##    ##  ##       ##    ##
+######## ########   ######   ########  ######
+*/
+
+vector< vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
+  vector<Point2f> points;
+  KeyPoint::convert(kpts, points);
+  map<pair<double, double> , int> pt_idx;
+
+  // Mapping points with their indices
+  for (int i = 0; i < points.size(); i++) {
+    Point2f p = points[i];
+    pt_idx[make_pair(p.x, p.y)] = i;
+  }
+
+  // Triangulation
+  Size size = img.size();
+  Rect rect(0, 0, size.width, size.height); // TODO
+  Subdiv2D subdiv(rect);
+  subdiv.insert(points);
+  vector<Vec6f> triangleList;
+  subdiv.getTriangleList(triangleList);
+
+  drawDelaunay(img, triangleList);
+
+  // Converting to edges with coordinates to indices
+  int rect_count_outliers = 0;
+  int map_count_outliers = 0;
+  vector<Point2f> pt(3);
+  vector<vector<int> > edges;
+  for (int i = 0; i < triangleList.size(); i++) {
+    Vec6f t = triangleList[i];
+    pt[0] = Point2f(t[0], t[1]);
+    pt[1] = Point2f(t[2], t[3]);
+    pt[2] = Point2f(t[4], t[5]);
+    if (rect.contains(pt[0]) && rect.contains(pt[1]) && rect.contains(pt[2])) {
+      pair<double, double> p0 = make_pair(pt[0].x, pt[0].y);
+      pair<double, double> p1 = make_pair(pt[1].x, pt[1].y);
+      pair<double, double> p2 = make_pair(pt[2].x, pt[2].y);
+      if (pt_idx.count(p0) && pt_idx.count(p1) && pt_idx.count(p2)) {
+        vector<int> edge(3);
+        edge[0] = pt_idx[p0];
+        edge[1] = pt_idx[p1];
+        edge[2] = pt_idx[p2];
+        edges.push_back(edge);
+      } else {
+        map_count_outliers++;
+      }
+    } else {
+      rect_count_outliers++;
+    }
+  }
+  
+  cout << "[delaunayTriangulation] ";
+  cout << "Size of input KeyPoints " << kpts.size() << endl;
+  cout << "[delaunayTriangulation] ";
+  cout << "Size of input points " << points.size() << endl;
+  cout << "[delaunayTriangulation] ";
+  cout << "Size of trinagleList: " << triangleList.size() << endl;
+  cout << "[delaunayTriangulation] ";
+  cout << "Number of Rect outliers " << rect_count_outliers << endl;
+  cout << "[delaunayTriangulation] ";
+  cout << "Number of Map outliers " << map_count_outliers << endl;
+  cout << "[delaunayTriangulation] ";
+  int outliers = rect_count_outliers + map_count_outliers;
+  if ((triangleList.size() - outliers) != edges.size()) {
+    cout << "Edges has more elements than it should" << endl;
+  } {
+    cout << "Edges has exactly (trinagleList.size() - outliers) elements" << endl;
+  }
+  // for (int i = 0; i < edges.size(); i++) {
+  //   cout << "Edges number " << i << " : " << endl;
+  //   cout << edges[i][0] << " ";
+  //   cout << edges[i][1] << " ";
+  //   cout << edges[i][2] << endl;
+  // }
+
+  return edges;
+}
+
 
 void positionXYIJK(Mat &indice, vector<KeyPoint> &point){
-float size = indice.rows*sizeof(float);
-float  *determinant;
-determinant = (float *) malloc(size);
+  float size = indice.rows*sizeof(float);
+  float  *determinant;
+  determinant = (float *) malloc(size);
 
   for (int i = 0; i < indice.rows; i++) {
       float x1 = point[indice.at<int>(i, 0)].pt.x;
@@ -151,97 +274,69 @@ determinant = (float *) malloc(size);
 
     }
   free(determinant);
-
 }
 
-
-
 int main(int argc, const char *argv[]) {
-  const Mat imgA = imread("./house/house.seq0.png", 0); // Load as grayscale
-  const Mat imgB = imread("./house/house.seq0.png", 0); // Load as grayscale
+  const Mat img1 = imread("./house/house.seq0.png", 0); // Load as grayscale
+  const Mat img2 = imread("./house/house.seq0.png", 0); // Load as grayscale
 
-  // Mat prueba2(4, 3, DataType<float>::type);
-
-  // prueba 2
-  // prueba2.at<int>(0, 0) = 0;
-  // prueba2.at<int>(0, 1) = 1;
-  // prueba2.at<int>(0, 2) = 2;
-  //
-  // prueba2.at<int>(1, 0) = 2;
-  // prueba2.at<int>(1, 1) = 0;
-  // prueba2.at<int>(1, 2) = 1;
-  //
-  // prueba2.at<int>(2, 0) = 2;
-  // prueba2.at<int>(2, 1) = 1;
-  // prueba2.at<int>(2, 2) = 0;
-  //
-  // prueba2.at<int>(3, 0) = 1;
-  // prueba2.at<int>(3, 1) = 4;
-  // prueba2.at<int>(3, 2) = 3;
-
-  SiftFeatureDetector detector(4);
+  SurfFeatureDetector detector(10);
 
   vector<KeyPoint> keypoints1;
   vector<KeyPoint> keypoints2;
-  detector.detect(imgA, keypoints1);
-  detector.detect(imgB, keypoints2);
+  detector.detect(img1, keypoints1);
+  detector.detect(img2, keypoints2);
   Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create("SIFT");
 
-  Mat descriptorA, descriptorB;
+  Mat descriptor1, descriptor2;
 
-  descriptor->compute(imgA, keypoints1, descriptorA);
-  descriptor->compute(imgB, keypoints2, descriptorB);
-  // cout << "Descriptor size " << descriptorA.cols << endl;
-  // for (int i = 0; i < descriptorA.cols; i++) {
-  //   cout << "Index " << i << ": "<< descriptorA.at<double>(0, i) << endl;
-  // }
-  // cout << endl;
+  descriptor->compute(img1, keypoints1, descriptor1);
+  descriptor->compute(img2, keypoints2, descriptor2);
+
   // Add results to image and save.
   Mat output1;
   Mat output2;
 
-  drawKeypoints(imgA, keypoints1, output1);
+  drawKeypoints(img1, keypoints1, output1);
   imwrite("sift_result.jpg", output1);
-  drawKeypoints(imgB, keypoints2, output2);
+  drawKeypoints(img2, keypoints2, output2);
   imwrite("sift_result1.jpg", output2);
+
   Mat dist1 = distancePoints(keypoints1);
-  // for (int i = 0; i < dist1.rows; i++) {
-  //   for (int j = 0; j < dist1.cols; j++) {
-  //     cout << "Dist " << i << " and " << j << ": " << dist1.at<double>(i, j) << endl;
-  //   }
-  // }
   Mat dist2 = distancePoints(keypoints2);
-  // cout << endl << "Distance second image" << endl;
-  // for (int i = 0; i < dist2.rows; i++) {
-  //   for (int j = 0; j < dist2.cols; j++) {
-  //     cout << "Dist " << i << " and " << j << ": " << dist2.at<double>(i, j) << endl;
+
+  // build hyperedges vector
+  vector<vector<int> > Edges1 = delaunayTriangulation(img1, keypoints1);
+  cout << "Edges1 has: " << Edges1.size() << " elements" << endl;
+  // Mat Edges1 = KNN(dist1);
+  // Mat Edges2 = KNN(dist2);
+
+  // edge matching
+  // Mat matches = matchHyperedges(Edges1, Edges2, keypoints1, keypoints2);
+  // point matching
+
+  // draw matching
+
+  // Mat matSimilarity = distanceBetweenImg(descriptor1, descriptor2);
+  // for (int i = 0; i < matSimilarity.rows; i++) {
+  //   for (int j = 0; j < matSimilarity.cols; j++) {
+  //     cout << "Similarity " << i << " and " << j << ": " << matSimilarity.at<double>(i, j) << endl;
   //   }
   // }
-  Mat matSimilarity = distanceBetweenImg(descriptorA, descriptorB);
-  for (int i = 0; i < matSimilarity.rows; i++) {
-    for (int j = 0; j < matSimilarity.cols; j++) {
-      cout << "Similarity " << i << " and " << j << ": " << matSimilarity.at<double>(i, j) << endl;
-    }
-  }
-  // Mat dist1 = euclidDistance(descriptorA);
+  // Mat dist1 = euclidDistance(descriptor1);
   // for (int i = 0; i < dist1.rows; i++) {
   //   for (int j = 0; j < dist1.cols; j++) {
   //     cout << dist1.at<double>(i, j) << " ";
   //   }
   //   cout << endl;
   // }
-  // euclidDistance(descriptorB);
+  // euclidDistance(descriptor2);
   // KNN(prueba);
   // Mat prueba2(keypoints.size(), 3, DataType<float>::type);
-  // Mat Edges1 = KNN(dist1);
-  // Mat Edges2 = KNN(dist2);
   // positionXYIJK(prueba2,keypoints);
-  //
-  // cout << keypoints.size() << endl;
-  // cout << keypoints1.size() << endl;
 
   // for (int i = 0; i < keypoints.size(); i++) {
-  //   cout << "DescriptorA (" << descriptorA.row(i) << ")" << endl;
+  //   cout << "DescriptorA (" << descriptor1.row(i) << ")" << endl;
   // }
 
   return 0;
