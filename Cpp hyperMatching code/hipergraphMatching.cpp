@@ -258,6 +258,56 @@ vector< vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
   return edges;
 }
 
+/*
+##     ##    ###    ########  ######  ##     ## #### ##    ##  ######
+###   ###   ## ##      ##    ##    ## ##     ##  ##  ###   ## ##    ##
+#### ####  ##   ##     ##    ##       ##     ##  ##  ####  ## ##
+## ### ## ##     ##    ##    ##       #########  ##  ## ## ## ##   ####
+##     ## #########    ##    ##       ##     ##  ##  ##  #### ##    ##
+##     ## ##     ##    ##    ##    ## ##     ##  ##  ##   ### ##    ##
+##     ## ##     ##    ##     ######  ##     ## #### ##    ##  ######
+*/
+
+vector< pair<int, int> > matchHyperedges(vector<vector<int> > &edges1, vector<vector<int> > &edges2,
+                     vector<KeyPoint> &kpts1, vector<KeyPoint> &kpts2,
+                     Mat &desc1, Mat &desc2, double c1, double c2, double c3,
+                     double thresholding) {
+  double sigma = 0.5;
+  vector< pair<int, int> > matches;
+  double suma = c1 + c2 + c3;
+  c1 /= suma;
+  c2 /= suma;
+  c3 /= suma;
+
+  for (int i = 0; i < edges1.size(); i++) {
+    int best_match_idx = INT_MIN;
+    double max_similarity = -DBL_MIN;
+    double s_ang = -DBL_MIN;
+    double s_area = -DBL_MIN;
+    double s_desc = -DBL_MIN;
+    for (int j = 0; j < edges2.size(); j++) {
+      // TODO similarity distances
+      double sim_dist = 0.0;
+      // TODO similarity angles
+      double sim_angles = 0.0;
+      // TODO similarity descriptors
+      double sim_desc = 0.0;
+      // TODO linear combination of similarities
+      double similarity = c1 * sim_dist + c2 * sim_angles + c3 * sim_desc;
+      if (similarity > max_similarity) {
+        best_match_idx = j;
+        max_similarity = similarity;
+        s_area = sim_dist;
+        s_ang = sim_angles;
+        s_desc = sim_desc;
+      }
+    }
+    if (max_similarity >= thresholding) {
+      matches.push_back(make_pair(i, best_match_idx));
+    }
+  }
+  return matches;
+}
 
 // float positionXYIJK(Mat &indice, vector<KeyPoint> &point){
 //   float size = indice.rows*sizeof(float);
@@ -317,8 +367,10 @@ int main(int argc, const char *argv[]) {
   vector<vector<int> > Edges2 = delaunayTriangulation(img2, keypoints2);
 
   // TODO Hyperedge matching
-  // Mat matches = matchHyperedges(Edges1, Edges2, keypoints1, keypoints2);
-
+  vector<pair<int, int> > matches = matchHyperedges(Edges1, Edges2, keypoints1,
+                                                    keypoints2, descriptor1,
+                                                    descriptor2, 5, 5, 10,
+                                                    0.85);
   // TODO Point matching
 
   // TODO Draw matching
