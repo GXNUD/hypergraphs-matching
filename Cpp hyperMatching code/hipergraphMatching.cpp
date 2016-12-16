@@ -286,57 +286,41 @@ int main(int argc, const char *argv[]) {
   const Mat img1 = imread("./house/house.seq0.png", 0); // Load as grayscale
   const Mat img2 = imread("./house/house.seq0.png", 0); // Load as grayscale
 
-  SurfFeatureDetector detector(10);
+  // For Surf detection
+  int minHessian = 400;
 
-  vector<KeyPoint> keypoints1;
-  vector<KeyPoint> keypoints2;
+  SurfFeatureDetector detector(minHessian);
+  vector<KeyPoint> keypoints1, keypoints2;
   detector.detect(img1, keypoints1);
   detector.detect(img2, keypoints2);
-  Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create("SURF");
 
+  SurfDescriptorExtractor extractor;
   Mat descriptor1, descriptor2;
+  extractor.compute(img1, keypoints1, descriptor1);
+  extractor.compute(img2, keypoints2, descriptor2);
 
-  descriptor->compute(img1, keypoints1, descriptor1);
-  descriptor->compute(img2, keypoints2, descriptor2);
-
-  // Add results to image and save.
+  // Add results to an image and save them.
   Mat output1;
   Mat output2;
 
   drawKeypoints(img1, keypoints1, output1);
-  imwrite("sift_result.jpg", output1);
+  imwrite("sift_result1.jpg", output1);
   drawKeypoints(img2, keypoints2, output2);
-  imwrite("sift_result1.jpg", output2);
+  imwrite("sift_result2.jpg", output2);
 
+  // Distance between every point to every point of same image
   Mat dist1 = distancePoints(keypoints1);
   Mat dist2 = distancePoints(keypoints2);
 
-  // build hyperedges vector
+  // Building hyperedges Matrices
   vector<vector<int> > Edges1 = delaunayTriangulation(img1, keypoints1);
-  // Mat Edges1 = KNN(dist1);
-  // Mat Edges2 = KNN(dist2);
+  vector<vector<int> > Edges2 = delaunayTriangulation(img2, keypoints2);
 
-  // edge matching
+  // TODO Hyperedge matching
   // Mat matches = matchHyperedges(Edges1, Edges2, keypoints1, keypoints2);
-  // point matching
 
-  // draw matching
+  // TODO Point matching
 
-  // Mat matSimilarity = distanceBetweenImg(descriptor1, descriptor2);
-  // for (int i = 0; i < matSimilarity.rows; i++) {
-  //   for (int j = 0; j < matSimilarity.cols; j++) {
-  //     cout << "Similarity " << i << " and " << j << ": " << matSimilarity.at<double>(i, j) << endl;
-  //   }
-  // }
-  // Mat dist1 = euclidDistance(descriptor1);
-  // for (int i = 0; i < dist1.rows; i++) {
-  //   for (int j = 0; j < dist1.cols; j++) {
-  //     cout << dist1.at<double>(i, j) << " ";
-  //   }
-  //   cout << endl;
-  // }
-  // euclidDistance(descriptor2);
-  // KNN(prueba);
-  // Mat prueba2(keypoints.size(), 3, DataType<float>::type);
-  // positionXYIJK(prueba2,keypoints);
+  // TODO Draw matching
+
 }

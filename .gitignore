@@ -5,4 +5,5 @@ __pycache__/
 *.out
 *.in
 
-sift_result*
+sift_result1.jpg
+sift_result2.jpg
