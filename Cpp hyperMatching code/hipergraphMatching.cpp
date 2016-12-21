@@ -9,98 +9,38 @@
 using namespace cv;
 using namespace std;
 
-// Distancia ecluidinana entre los puntos de una misma imagen usando
-// descriptores
-// Mat euclidDistance(Mat &vect1) {
-//   Mat matrixEuclidian(vect1.rows, vect1.rows, DataType<double>::type);
-//   for (int i = 0; i < vect1.rows; i++){
-//     for (int j = 0; j < vect1.rows; j++){
-//       double sum = 0.0;
-//       for (int k = 0; k < vect1.cols; k++){
-//         double e_i = vect1.at<double>(k, i);
-//         double e_j = vect1.at<double>(k, j);
-//         cout << e_i << " " << e_j << " : " << ((e_i - e_j) * (e_i - e_j)) << endl;
-//         sum += ((e_i - e_j) * (e_i - e_j));
-//       }
-//       matrixEuclidian.at<double>(i,j) = sqrt(sum);
-//     }
-//   }
-//   cout << "Distancias en la función" << endl;
-//   for (int i = 0; i < vect1.rows; i++) {
-//     for (int j = 0; j < vect1.rows; j++) {
-//       cout << matrixEuclidian.at<double>(i, j) << " ";
-//     }
-//     cout << endl;
-//   }
-//   return matrixEuclidian;
-// }
-
-// //Distancias entre los puntos caracteristicas de una imagen1 usando la
-// posición del punto.
-// Mat distancePoints(vector<KeyPoint> &point) {
-//   int n = point.size();
-//   Mat matrixEuclidian(n, n, DataType<float>::type),
-//       matrixEuclidianSort(n, n, DataType<int>::type);
-//   for (int i = 0; i < n; i++) {
-//     for (int j = 0; j < n; j++) {
-//       float x1 = point[i].pt.x;
-//       float x2 = point[j].pt.x;
-//       float y1 = point[i].pt.y;
-//       float y2 = point[j].pt.y;
-//       matrixEuclidian.at<float>(i, j) =
-//           sqrt(((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)));
-//     }
-//   }
-//   cv::sortIdx(matrixEuclidian, matrixEuclidianSort , CV_SORT_ASCENDING);
-//
-//   for (int i = 0; i < n; i++) {
-//     for (int j = 0; j < n; j++) {
-//       cout << matrixEuclidian.at<float>(i, j) << " ";
-//     }
-//     cout << endl;
-//   }
-//   cout<<"ordenado" <<endl;
-//   for (int i = 0; i < 10; i++) {
-//     for (int j = 0; j < 10; j++) {
-//       cout << matrixEuclidianSort.at<int>(i,j) << " ";
-//     }
-//     cout << endl;
-//   }
-//   return matrixEuclidian;
-// }
-
 /*
-  sen(theta) = V1 dot V2 / |V1| * |V2|, ésta es una medida de similaridad entre
+  cos(theta) = V1 dot V2 / |V1| * |V2|, ésta es una medida de similaridad entre
   descriptores de dos puntos, entre mayor sea el valor de similarity, más parecidos
   son los descriptores. El calculo se hace para cada pareja entre los puntos de las
   dos imagenes.
 */
-// Mat distanceBetweenImg(Mat &vec1, Mat &vec2) {
-//   Mat similarity(vec1.rows, vec2.rows, DataType<float>::type);
-//   for (int i = 0; i < vec1.rows; i++) {
-//     for (int j = 0; j < vec2.rows; j++) {
-//       float producto = 0.0;
-//       float norma1 = 0.0;
-//       float norma2 = 0.0;
-//       for (int k = 0; k < vec1.cols; k++) {
-//         norma1 += vec1.at<float>(i, k)*vec1.at<float>(i, k);
-//         norma2 += vec2.at<float>(j, k)*vec2.at<float>(j, k);
-//         producto += (vec1.at<float>(i, k) * vec2.at<float>(j, k));
-//       }
-//
-//       similarity.at<float>(i, j) = (producto / ((sqrt(norma1) * sqrt(norma2))));
-//     }
-//   }
-//   for (int i = 0; i < 10; i++) {
-//     for (int j = 0; j < 10; j++) {
-//       if (similarity.at<double>(i,j)> 0.5000000) {
-//         cout << similarity.at<float>(j, i) << " ";
-//       }
-//     }
-//     cout << endl;
-//   }
-//   return similarity;
-// }
+Mat distanceBetweenImg(Mat &vec1, Mat &vec2) {
+  Mat similarity(vec1.rows, vec2.rows, DataType<float>::type);
+  for (int i = 0; i < vec1.rows; i++) {
+    for (int j = 0; j < vec2.rows; j++) {
+      float producto = 0.0;
+      float norma1 = 0.0;
+      float norma2 = 0.0;
+      for (int k = 0; k < vec1.cols; k++) {
+        norma1 += vec1.at<float>(i, k)*vec1.at<float>(i, k);
+        norma2 += vec2.at<float>(j, k)*vec2.at<float>(j, k);
+        producto += (vec1.at<float>(i, k) * vec2.at<float>(j, k));
+      }
+
+      similarity.at<float>(i, j) = (producto / ((sqrt(norma1) * sqrt(norma2))));
+    }
+  }
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < 10; j++) {
+      if (similarity.at<double>(i,j)> 0.5000000) {
+        cout << similarity.at<float>(j, i) << " ";
+      }
+    }
+    cout << endl;
+  }
+  return similarity;
+}
 
 /*
 * Algoritmo de los k vecinos más cercanos, esto nos permitira conocer
@@ -453,7 +393,6 @@ vector<double> getAnglesSines(vector<int> &edge, vector<KeyPoint> &kpts) {
   //   cout << angle_sines[i] << " ";
   // }
   // cout << endl;
-
   return angle_sines;
 }
 
@@ -492,32 +431,25 @@ double anglesSimilarity(vector<int> e1, vector<int> e2, vector<KeyPoint> &kpts1,
   return similarity;
 }
 
+// TODO find a better way for this similarity
 double descSimilarity(vector<int> e1, vector<int> e2, Mat desc1, Mat desc2,
                       double sigma) {
   vector<vector<int> > perm_edge = getPermutation(e2);
   vector<double> diffs(perm_edge.size());
+  // double max_diff_norm = -1.0;
   for (int i = 0; i < perm_edge.size(); i++) {
-    double suma = 0.0;
+    Mat_<double> diff_norms(1, 3);
+    double norm_sums = 0.0;
     for (int j = 0; j < e2.size(); j++) {
       Mat_<double> m_diffs;
       absdiff(desc1.row(j), desc2.row(perm_edge[i][j]), m_diffs);
-      Mat comp;
-      compare(desc1.row(j), desc2.row(perm_edge[i][j]), comp, CMP_NE);
-      if (countNonZero(comp)) {
-        cout << "EQUALS ";
-        cout << "With norm: " << norm(m_diffs) << endl; // TODO bad diffs
-      }
-      suma += norm(m_diffs);
+      diff_norms(j) = norm(m_diffs);
+      norm_sums += diff_norms(i);
     }
-    diffs[i] = suma;
+    diffs[i] = norm(diff_norms);
   }
   vector<double>::iterator min_diff = min_element(diffs.begin(), diffs.end());
-  double similarity = exp(- (*min_diff));
-
-  cout << "[descSimilarity] ";
-  cout << "Min diff: " << *min_diff << endl;
-  cout << "[descSimilarity] ";
-  cout << "similarity " << similarity << endl;
+  double similarity = exp(- (*min_diff) / sigma);
 
   return similarity;
 }
@@ -561,8 +493,8 @@ vector< pair<int, int> > matchHyperedges(vector<vector<int> > &edges1,
                                        desc2, sigma);
       double similarity = c1 * area_dist + c2 * sim_angles + c3 * sim_desc;
 
-      cout << "[matchHyperedges] ";
-      cout << "Combined Similarity " << similarity << endl;
+      // cout << "[matchHyperedges] ";
+      // cout << "Combined Similarity " << similarity << endl;
 
       if (similarity > max_similarity) {
         best_match_idx = j;
@@ -573,8 +505,38 @@ vector< pair<int, int> > matchHyperedges(vector<vector<int> > &edges1,
       }
     }
     if (max_similarity >= thresholding) {
-      cout << "HEY one match" << endl;
       matches.push_back(make_pair(i, best_match_idx));
+    }
+  }
+  return matches;
+}
+
+double descDistance(Mat e1, Mat e2) {
+  double dot = e1.dot(e2);
+  double dist = acos(dot / (norm(e1) * norm(e2)));
+  return dist;
+}
+
+vector<DMatch> matchPoints(vector<pair<int, int> > edge_matches, Mat &desc1,
+                           Mat &desc2, vector<vector<int> > &edges1,
+                           vector<vector<int> > &edges2) {
+  vector<DMatch> matches;
+  for (int i = 0; i < edge_matches.size(); i++) {
+    int base_edge_idx = edge_matches[i].first;
+    int ref_edge_idx  = edge_matches[i].second;
+    for (int i = 0; i < 3; i++) {
+      double min_dist = DBL_MAX;
+      int best_match = -1;
+      int p1_idx = edges1[base_edge_idx][i];
+      for (int j = 0; j < 3; j++) {
+        int p2_idx = edges2[ref_edge_idx][j];
+        double dist = descDistance(desc1.row(p1_idx), desc2.row(p2_idx));
+        if (dist < min_dist) {
+          min_dist = dist;
+          best_match = p2_idx;
+        }
+      }
+      matches.push_back(DMatch(p1_idx, best_match, min_dist));
     }
   }
   return matches;
@@ -593,6 +555,7 @@ vector< pair<int, int> > matchHyperedges(vector<vector<int> > &edges1,
 int main(int argc, const char *argv[]) {
   Mat img1 = imread("./house/house.seq0.png", 0); // Load as grayscale
   Mat img2 = imread("./house/house.seq0.png", 0);
+  Mat out_img;
 
   // For Surf detection
   int minHessian = 400;
@@ -629,13 +592,19 @@ int main(int argc, const char *argv[]) {
   vector<vector<int> > Edges2 = delaunayTriangulation(img2, t_keypoints2);
 
   // TODO Hyperedge matching
-  vector<pair<int, int> > matches = matchHyperedges(Edges1, Edges2, t_keypoints1,
-                                                    t_keypoints2, descriptor1,
-                                                    descriptor2, 15, 10, 5,
-                                                    0.85);
+  vector<pair<int, int> > edge_matches = matchHyperedges(Edges1, Edges2,
+                                                         t_keypoints1,
+                                                         t_keypoints2,
+                                                         descriptor1,
+                                                         descriptor2, 15, 10,
+                                                         5, 0.85);
   // TODO Point matching
+  vector<DMatch> matches = matchPoints(edge_matches, descriptor1, descriptor2,
+                                       Edges1, Edges2);
 
-  // TODO Draw matching
-  drawEdgesMatch(img1, img2, matches, Edges1, Edges2, t_keypoints1, t_keypoints2);
+  // Draw matching
+  drawMatches(img1, t_keypoints1, img2, keypoints2, matches, out_img);
+  imshow("Matches", out_img);
+  waitKey(0);
   return 0;
 }
