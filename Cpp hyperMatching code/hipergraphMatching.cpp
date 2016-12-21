@@ -10,96 +10,6 @@ using namespace cv;
 using namespace std;
 
 /*
-  cos(theta) = V1 dot V2 / |V1| * |V2|, ésta es una medida de similaridad entre
-  descriptores de dos puntos, entre mayor sea el valor de similarity, más parecidos
-  son los descriptores. El calculo se hace para cada pareja entre los puntos de las
-  dos imagenes.
-*/
-Mat distanceBetweenImg(Mat &vec1, Mat &vec2) {
-  Mat similarity(vec1.rows, vec2.rows, DataType<float>::type);
-  for (int i = 0; i < vec1.rows; i++) {
-    for (int j = 0; j < vec2.rows; j++) {
-      float producto = 0.0;
-      float norma1 = 0.0;
-      float norma2 = 0.0;
-      for (int k = 0; k < vec1.cols; k++) {
-        norma1 += vec1.at<float>(i, k)*vec1.at<float>(i, k);
-        norma2 += vec2.at<float>(j, k)*vec2.at<float>(j, k);
-        producto += (vec1.at<float>(i, k) * vec2.at<float>(j, k));
-      }
-
-      similarity.at<float>(i, j) = (producto / ((sqrt(norma1) * sqrt(norma2))));
-    }
-  }
-  for (int i = 0; i < 10; i++) {
-    for (int j = 0; j < 10; j++) {
-      if (similarity.at<double>(i,j)> 0.5000000) {
-        cout << similarity.at<float>(j, i) << " ";
-      }
-    }
-    cout << endl;
-  }
-  return similarity;
-}
-
-/*
-* Algoritmo de los k vecinos más cercanos, esto nos permitira conocer
-* los indices de la matrix de los vecinos más cercanos,
-* para hacer el hipergrafo de la img1 como de img2
-*/
-// Mat KNN(Mat &matEucl) {
-//   Mat indices(matEucl.rows, 3, DataType<int>::type);
-//   float minDist = 10e6;
-//   int minIdx1 = -1;
-//   int minIdx2 = -1;
-//   for (int i = 0; i < matEucl.rows; i++) {
-//     for (int j = 0; j < matEucl.cols; j++) {
-//       if ((matEucl.at<float>(i, j) <= minDist) && (j != i)) {
-//         minDist = matEucl.at<float>(i, j);
-//         minIdx1 = j;
-//       }
-//     }
-//     minDist = 1e6;
-//     for (int j = 0; j < matEucl.cols; j++) {
-//       if ((matEucl.at<float>(i, j) <= minDist) && (j != minIdx1) && (j != i)) {
-//         minDist = matEucl.at<float>(i, j);
-//         minIdx2 = j;
-//       }
-//     }
-//     cout << "Indice0: " << i << " "
-//          << "indice1: " << minIdx1 << " "
-//          << "indice2: " << minIdx2 << endl;
-//     indices.at<int>(i, 0) = i;
-//     indices.at<int>(i, 1) = minIdx1;
-//     indices.at<int>(i, 2) = minIdx2;
-//   }
-//   return indices;
-// }
-
-// float positionXYIJK(Mat &indice, vector<KeyPoint> &point){
-//   float size = indice.rows*sizeof(float);
-//   float  *determinant;
-//   determinant = (float *) malloc(size);
-//
-//   for (int i = 0; i < indice.rows; i++) {
-//       float x1 = point[indice.at<int>(i, 0)].pt.x;
-//       float y1 = point[indice.at<int>(i, 0)].pt.y;
-//       float x2 = point[indice.at<int>(i, 1)].pt.x;
-//       float y2 = point[indice.at<int>(i, 1)].pt.y;
-//       float x3 = point[indice.at<int>(i, 2)].pt.x;
-//       float y3 = point[indice.at<int>(i, 2)].pt.y;
-//       determinant[i] = (x1-x3)*(y2-y3)-(x2-x3)*(y1-y3);
-//       cout << "V1: " << x1 << ", " << y1 << endl;
-//       cout << "V2: " << x2 << ", " << y2 << endl;
-//       cout << "V3: " << x3 << ", " << y3 << endl;
-//       cout << determinant[i] << endl;
-//
-//     }
-//   return *determinant;
-//   free(determinant);
-// }
-
-/*
 ########  ########     ###    ##      ## #### ##    ##  ######
 ##     ## ##     ##   ## ##   ##  ##  ##  ##  ###   ## ##    ##
 ##     ## ##     ##  ##   ##  ##  ##  ##  ##  ####  ## ##
@@ -189,7 +99,7 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
 
   // Triangulation
   Size size = img.size();
-  Rect rect(0, 0, size.width, size.height); // TODO
+  Rect rect(0, 0, size.width, size.height);
   Subdiv2D subdiv(rect);
   subdiv.insert(points);
   vector<Vec6f> triangleList;
@@ -252,6 +162,40 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
   // }
 
   return edges;
+}
+
+/*
+* Algoritmo de los k vecinos más cercanos, esto nos permitira conocer
+* los indices de la matrix de los vecinos más cercanos,
+* para hacer el hipergrafo de la img1 como de img2
+*/
+Mat KNN(Mat &matEucl) {
+  Mat indices(matEucl.rows, 3, DataType<int>::type);
+  float minDist = 10e6;
+  int minIdx1 = -1;
+  int minIdx2 = -1;
+  for (int i = 0; i < matEucl.rows; i++) {
+    for (int j = 0; j < matEucl.cols; j++) {
+      if ((matEucl.at<float>(i, j) <= minDist) && (j != i)) {
+        minDist = matEucl.at<float>(i, j);
+        minIdx1 = j;
+      }
+    }
+    minDist = 1e6;
+    for (int j = 0; j < matEucl.cols; j++) {
+      if ((matEucl.at<float>(i, j) <= minDist) && (j != minIdx1) && (j != i)) {
+        minDist = matEucl.at<float>(i, j);
+        minIdx2 = j;
+      }
+    }
+    cout << "Indice0: " << i << " "
+         << "indice1: " << minIdx1 << " "
+         << "indice2: " << minIdx2 << endl;
+    indices.at<int>(i, 0) = i;
+    indices.at<int>(i, 1) = minIdx1;
+    indices.at<int>(i, 2) = minIdx2;
+  }
+  return indices;
 }
 
 /*
@@ -512,8 +456,9 @@ vector< pair<int, int> > matchHyperedges(vector<vector<int> > &edges1,
 }
 
 double descDistance(Mat e1, Mat e2) {
-  double dot = e1.dot(e2);
-  double dist = acos(dot / (norm(e1) * norm(e2)));
+  Mat diffs;
+  absdiff(e1, e2, diffs);
+  double dist = sum(diffs)[0];
   return dist;
 }
 
@@ -552,58 +497,67 @@ vector<DMatch> matchPoints(vector<pair<int, int> > edge_matches, Mat &desc1,
 ##     ## ##     ## #### ##    ##
 */
 
+bool response_cmp(const KeyPoint& p1, const KeyPoint& p2) {
+    return p1.response > p2.response;
+}
+
 int main(int argc, const char *argv[]) {
   Mat img1 = imread("./house/house.seq0.png", 0); // Load as grayscale
-  Mat img2 = imread("./house/house.seq0.png", 0);
+  Mat img2 = imread("./house/house.seq0.trans.png", 0);
   Mat out_img;
 
   // For Surf detection
   int minHessian = 400;
 
   SurfFeatureDetector detector(minHessian);
-  vector<KeyPoint> keypoints1, keypoints2;
-  detector.detect(img1, keypoints1);
-  detector.detect(img2, keypoints2);
+  vector<KeyPoint> kpts1, kpts2;
+  detector.detect(img1, kpts1);
+  detector.detect(img2, kpts2);
+  sort(kpts1.begin(), kpts1.end(), response_cmp);
+  sort(kpts2.begin(), kpts2.end(), response_cmp);
+
   // Test vectors with less points
-  int limit = 5;
-  vector<KeyPoint> t_keypoints1(keypoints1.begin(), keypoints1.begin() + limit);
-  vector<KeyPoint> t_keypoints2(keypoints2.begin(), keypoints2.begin() + limit);
+  int limit = 10;
+  vector<KeyPoint> t_kpts1(kpts1.begin(), kpts1.begin() + limit);
+  vector<KeyPoint> t_kpts2(kpts2.begin(), kpts2.begin() + limit);
 
   SurfDescriptorExtractor extractor;
   Mat descriptor1, descriptor2;
-  extractor.compute(img1, t_keypoints1, descriptor1);
-  extractor.compute(img2, t_keypoints2, descriptor2);
+  extractor.compute(img1, t_kpts1, descriptor1);
+  extractor.compute(img2, t_kpts2, descriptor2);
 
   // Add results to an image and save them.
   Mat output1;
   Mat output2;
 
-  drawKeypoints(img1, t_keypoints1, output1);
+  drawKeypoints(img1, t_kpts1, output1);
   imwrite("sift_result1.jpg", output1);
-  drawKeypoints(img2, t_keypoints2, output2);
+  drawKeypoints(img2, t_kpts2, output2);
   imwrite("sift_result2.jpg", output2);
 
-  // Distance between every point to every point of same image
-  // Mat dist1 = distancePoints(t_keypoints1);
-  // Mat dist2 = distancePoints(t_keypoints2);
-
   // Building hyperedges Matrices
-  vector<vector<int> > Edges1 = delaunayTriangulation(img1, t_keypoints1);
-  vector<vector<int> > Edges2 = delaunayTriangulation(img2, t_keypoints2);
+  vector<vector<int> > Edges1 = delaunayTriangulation(img1, t_kpts1);
+  vector<vector<int> > Edges2 = delaunayTriangulation(img2, t_kpts2);
 
-  // TODO Hyperedge matching
+  cout << "Matching ..." << endl;
+  // Hyperedge matching
   vector<pair<int, int> > edge_matches = matchHyperedges(Edges1, Edges2,
-                                                         t_keypoints1,
-                                                         t_keypoints2,
+                                                         t_kpts1,
+                                                         t_kpts2,
                                                          descriptor1,
                                                          descriptor2, 15, 10,
                                                          5, 0.85);
-  // TODO Point matching
+
+  // Point matching
   vector<DMatch> matches = matchPoints(edge_matches, descriptor1, descriptor2,
                                        Edges1, Edges2);
 
-  // Draw matching
-  drawMatches(img1, t_keypoints1, img2, keypoints2, matches, out_img);
+  cout << "Matching Done!" << endl;
+  // Draw Edges matching
+  // drawEdgesMatch(img1, img2, edge_matches, Edges1, Edges2, t_kpts1, t_kpts2);
+
+  // Draw Point matching
+  drawMatches(img1, t_kpts1, img2, t_kpts2, matches, out_img);
   imshow("Matches", out_img);
   waitKey(0);
   return 0;
