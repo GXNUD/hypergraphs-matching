@@ -236,7 +236,7 @@ void drawEdgesMatch(Mat &img1, Mat &img2, vector< pair<int, int> > &matches,
 ######## ########   ######   ########  ######
 */
 
-vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
+vector<vector<int>> delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
   vector<Point2f> points;
   KeyPoint::convert(kpts, points);
   map<pair<double, double> , int> pt_idx;
@@ -596,7 +596,6 @@ int main(int argc, const char *argv[]) {
 
   // For Surf detection
   int minHessian = 400;
-
   SurfFeatureDetector detector(minHessian);
   vector<KeyPoint> keypoints1, keypoints2;
   detector.detect(img1, keypoints1);
@@ -615,6 +614,7 @@ int main(int argc, const char *argv[]) {
   Mat output1;
   Mat output2;
 
+  // suft GPU-parallel with opencv
   drawKeypoints(img1, t_keypoints1, output1);
   imwrite("sift_result1.jpg", output1);
   drawKeypoints(img2, t_keypoints2, output2);
