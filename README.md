@@ -10,3 +10,7 @@ g++ `pkg-config --cflags --libs opencv` hipergraphMatching.cpp -o hiper.out
 ```sh
 g++ -std=c++11 `pkg-config --cflags --libs opencv` hipergraphMatching.cpp -o hiper.out
 ```
+## or
+```sh
+g++ -std=c++11 `pkg-config --cflags opencv` hipergraphMatching.cpp `pkg-config --libs opencv` -o hiper.out
+```
