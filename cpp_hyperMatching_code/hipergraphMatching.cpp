@@ -88,6 +88,57 @@ void drawEdgesMatch(Mat &img1, Mat &img2, vector< pair<int, int> > &matches,
 }
 
 /*
+##     ## ######## #### ##        ######
+##     ##    ##     ##  ##       ##    ##
+##     ##    ##     ##  ##       ##
+##     ##    ##     ##  ##        ######
+##     ##    ##     ##  ##             ##
+##     ##    ##     ##  ##       ##    ##
+ #######     ##    #### ########  ######
+*/
+
+/**
+  Sums up elements of a vector
+
+  @param vec vector containing elements to accumulate
+  @return sum of elements
+*/
+long double accum(vector<double> &vec) {
+  long double sum = 0.0;
+  vector<double>::iterator it;
+  for (it = vec.begin(); it != vec.end(); it++) {
+    sum += *it;
+  }
+  return sum;
+}
+
+vector<vector<int> > getCombination(int n, int r) {
+  vector<bool> v(n);
+  vector<vector<int> > combinations;
+  fill(v.begin(), v.begin() + r, true);
+  do {
+    vector<int> one_combination;
+    for (int i = 0; i < n; ++i) {
+      if (v[i]) {
+          one_combination.push_back(i);
+      }
+    }
+    combinations.push_back(one_combination);
+  } while (prev_permutation(v.begin(), v.end()));
+  return combinations;
+}
+
+template<typename T>
+vector<vector<T> > getPermutation(vector<T> data) {
+  vector<vector<T> > perms;
+  sort(data.begin(), data.end());
+  do {
+    perms.push_back(data);
+  } while(next_permutation(data.begin(), data.end()));
+  return perms;
+}
+
+/*
 ######## ########   ######   ########  ######
 ##       ##     ## ##    ##  ##       ##    ##
 ##       ##     ## ##        ##       ##
@@ -228,32 +279,6 @@ Mat KNN(Mat &matEucl) {
  ######  #### ##     ## #### ######## ##     ## ##     ## ####    ##       ##
 */
 
-vector<vector<int> > getCombination(int n, int r) {
-  vector<bool> v(n);
-  vector<vector<int> > combinations;
-  fill(v.begin(), v.begin() + r, true);
-  do {
-    vector<int> one_combination;
-    for (int i = 0; i < n; ++i) {
-      if (v[i]) {
-          one_combination.push_back(i);
-      }
-    }
-    combinations.push_back(one_combination);
-  } while (prev_permutation(v.begin(), v.end()));
-  return combinations;
-}
-
-template<typename T>
-vector<vector<T> > getPermutation(vector<T> data) {
-  vector<vector<T> > perms;
-  sort(data.begin(), data.end());
-  do {
-    perms.push_back(data);
-  } while(next_permutation(data.begin(), data.end()));
-  return perms;
-}
-
 /*
  Calculating area of triangles with Heron's formula
  Area = sqrt(s*(s - a)*(s - b)*(s - c))
@@ -272,14 +297,14 @@ double areaSimilarity(vector<int> e1, vector<int> e2, vector<KeyPoint> &kpts1,
   vector<double> p_sides, q_sides;
   vector<vector<int> > comb_indices = getCombination(3, 2);
   for (int i = 0; i < comb_indices.size(); i++) {
-    long double p_side = norm(p[comb_indices[i][0]] - p[comb_indices[i][1]]);
-    long double q_side = norm(q[comb_indices[i][0]] - q[comb_indices[i][1]]);
+    double p_side = norm(p[comb_indices[i][0]] - p[comb_indices[i][1]]);
+    double q_side = norm(q[comb_indices[i][0]] - q[comb_indices[i][1]]);
     p_sides.push_back(p_side);
     q_sides.push_back(q_side);
   }
 
-  long double s_p = accumulate(p_sides.begin(), p_sides.end(), 0.0) / 2.0;
-  long double s_q = accumulate(q_sides.begin(), q_sides.end(), 0.0) / 2.0;
+  long double s_p = accum(p_sides) / 2.0;
+  long double s_q = accum(q_sides) / 2.0;
   long double p_area = sqrt(s_p*(s_p - p_sides[0])*(s_p - p_sides[1])*(s_p - p_sides[2]));
   long double q_area = sqrt(s_q*(s_q - q_sides[0])*(s_q - q_sides[1])*(s_q - q_sides[2]));
   long double similarity = exp(- abs(sqrt(p_area) - sqrt(q_area)) / sigma);
