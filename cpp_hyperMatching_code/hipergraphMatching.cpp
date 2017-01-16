@@ -1,10 +1,11 @@
 /**
     hypergraphMatching.cpp
-    Purpose: Find visual correspondences between the set of
-    features from two images
+    Purpose: Find visual correspondences between two sets of
+    features from a pair of images
 
     @author Leiver Andres Campeón <leiverandres04p@hotmail.com>
     @author Yensy Helena Gomez <yensy@sirius.utp.edu.co>
+    @author Juan Sebastián Vega Patiño <>
     @version 1.0 29/12/16
 */
 
@@ -100,9 +101,9 @@ void drawEdgesMatch(Mat &img1, Mat &img2, vector< pair<int, int> > &matches,
   Obtain a list of hyperedges from the Delaunay Triangulation computed with
   some Image Keypoints
 
-  @param img Image
+  @param img Image from which keypoints are extracted
   @param kpts
-  @return 
+  @return
 */
 
 vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
