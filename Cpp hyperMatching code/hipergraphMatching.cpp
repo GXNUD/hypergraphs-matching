@@ -255,7 +255,7 @@ vector<vector<int>> delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
   vector<Vec6f> triangleList;
   subdiv.getTriangleList(triangleList);
 
-  drawDelaunay(img, triangleList);
+  // drawDelaunay(img, triangleList);
 
   // Converting to edges with coordinates to indices
   int rect_count_outliers = 0;
@@ -591,8 +591,8 @@ vector< pair<int, int> > matchHyperedges(vector<vector<int> > &edges1,
 */
 
 int main(int argc, const char *argv[]) {
-  Mat img1 = imread("./house/house.seq0.png", 0); // Load as grayscale
-  Mat img2 = imread("./house/house.seq0.png", 0);
+  Mat img1 = imread("./536.jpg", 0); // Load as grayscale
+  Mat img2 = imread("./536.jpg", 0);
 
   // For Surf detection
   int minHessian = 400;
@@ -601,41 +601,43 @@ int main(int argc, const char *argv[]) {
   detector.detect(img1, keypoints1);
   detector.detect(img2, keypoints2);
   // Test vectors with less points
-  int limit = 5;
-  vector<KeyPoint> t_keypoints1(keypoints1.begin(), keypoints1.begin() + limit);
-  vector<KeyPoint> t_keypoints2(keypoints2.begin(), keypoints2.begin() + limit);
+  //int limit = 5;
+  //vector<KeyPoint> t_keypoints1(keypoints1.begin(), keypoints1.begin() + limit);
+  //vector<KeyPoint> t_keypoints2(keypoints2.begin(), keypoints2.begin() + limit);
 
   SurfDescriptorExtractor extractor;
   Mat descriptor1, descriptor2;
-  extractor.compute(img1, t_keypoints1, descriptor1);
-  extractor.compute(img2, t_keypoints2, descriptor2);
+  extractor.compute(img1, keypoints1, descriptor1);
+  extractor.compute(img2, keypoints2, descriptor2);
+  //extractor.compute(img1, t_keypoints1, descriptor1);
+  //extractor.compute(img2, t_keypoints2, descriptor2);
 
   // Add results to an image and save them.
-  Mat output1;
-  Mat output2;
+  Mat output3;
+  Mat output4;
 
   // suft GPU-parallel with opencv
-  drawKeypoints(img1, t_keypoints1, output1);
-  imwrite("sift_result1.jpg", output1);
-  drawKeypoints(img2, t_keypoints2, output2);
-  imwrite("sift_result2.jpg", output2);
+  drawKeypoints(img1, keypoints1, output3);
+  imwrite("surfCPU_result1.jpg", output3);
+  drawKeypoints(img2, keypoints2, output4);
+  imwrite("surfCPU_result2.jpg", output4);
 
   // Distance between every point to every point of same image
   // Mat dist1 = distancePoints(t_keypoints1);
   // Mat dist2 = distancePoints(t_keypoints2);
 
   // Building hyperedges Matrices
-  vector<vector<int> > Edges1 = delaunayTriangulation(img1, t_keypoints1);
-  vector<vector<int> > Edges2 = delaunayTriangulation(img2, t_keypoints2);
+  // vector<vector<int> > Edges1 = delaunayTriangulation(img1, keypoints1);
+  // vector<vector<int> > Edges2 = delaunayTriangulation(img2, keypoints2);
 
   // TODO Hyperedge matching
-  vector<pair<int, int> > matches = matchHyperedges(Edges1, Edges2, t_keypoints1,
-                                                    t_keypoints2, descriptor1,
-                                                    descriptor2, 15, 10, 5,
-                                                    0.85);
-  // TODO Point matching
+  //  vector<pair<int, int> > matches = matchHyperedges(Edges1, Edges2, keypoints1,
+  //                                                 keypoints2, descriptor1,
+  //                                                   descriptor2, 15, 10, 5,
+  //                                                   0.85);
+  // // TODO Point matching
 
   // TODO Draw matching
-  drawEdgesMatch(img1, img2, matches, Edges1, Edges2, t_keypoints1, t_keypoints2);
+  //drawEdgesMatch(img1, img2, matches, Edges1, Edges2, keypoints1, keypoints2);
   return 0;
 }
