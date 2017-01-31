@@ -529,6 +529,8 @@ vector<DMatch> matchPoints(vector<pair<int, int> > edge_matches, Mat &desc1,
       matches.push_back(DMatch(p1_idx, best_match, min_dist));
     }
   }
+  // DEBUG
+  // cout << "Number of matches: " << matches.size() << endl;
   return matches;
 }
 
@@ -548,13 +550,14 @@ bool response_cmp(const KeyPoint& p1, const KeyPoint& p2) {
 
 int main(int argc, const char *argv[]) {
   Mat img1 = imread("./house/house.seq0.png", 0); // Load as grayscale
-  Mat img2 = imread("./house/house.seq0.trans.png", 0);
+  Mat img2 = imread("./house/house.seq0.png", 0);
   Mat out_img;
 
   // For Surf detection
   int minHessian = 400;
 
   SurfFeatureDetector detector(minHessian);
+  // SiftFeatureDetector detector(0.05, 5.0);
   vector<KeyPoint> kpts1, kpts2;
   detector.detect(img1, kpts1);
   detector.detect(img2, kpts2);
@@ -567,30 +570,31 @@ int main(int argc, const char *argv[]) {
   vector<KeyPoint> t_kpts2(kpts2.begin(), kpts2.begin() + limit);
 
   SurfDescriptorExtractor extractor;
+  // SiftDescriptorExtractor extractor;
   Mat descriptor1, descriptor2;
-  extractor.compute(img1, t_kpts1, descriptor1);
-  extractor.compute(img2, t_kpts2, descriptor2);
+  extractor.compute(img1, kpts1, descriptor1);
+  extractor.compute(img2, kpts2, descriptor2);
 
   // Add results to an image and save them.
   Mat output1;
   Mat output2;
 
-  drawKeypoints(img1, t_kpts1, output1);
+  drawKeypoints(img1, kpts1, output1);
   imwrite("sift_result1.jpg", output1);
-  drawKeypoints(img2, t_kpts2, output2);
+  drawKeypoints(img2, kpts2, output2);
   imwrite("sift_result2.jpg", output2);
 
   // Building hyperedges Matrices
-  vector<vector<int> > Edges1 = delaunayTriangulation(img1, t_kpts1);
-  vector<vector<int> > Edges2 = delaunayTriangulation(img2, t_kpts2);
+  vector<vector<int> > Edges1 = delaunayTriangulation(img1, kpts1);
+  vector<vector<int> > Edges2 = delaunayTriangulation(img2, kpts2);
 
   cout << "Matching ..." << endl;
   // Hyperedge matching
   vector<pair<int, int> > edge_matches = matchHyperedges(Edges1, Edges2,
-                                                         t_kpts1,
-                                                         t_kpts2,
+                                                         kpts1,
+                                                         kpts2,
                                                          descriptor1,
-                                                         descriptor2, 15, 10,
+                                                         descriptor2, 5, 10,
                                                          5, 0.85);
 
   // Point matching
@@ -599,10 +603,10 @@ int main(int argc, const char *argv[]) {
 
   cout << "Matching Done!" << endl;
   // Draw Edges matching
-  // drawEdgesMatch(img1, img2, edge_matches, Edges1, Edges2, t_kpts1, t_kpts2);
+  // drawEdgesMatch(img1, img2, edge_matches, Edges1, Edges2, kpts1, kpts2);
 
   // Draw Point matching
-  drawMatches(img1, t_kpts1, img2, t_kpts2, matches, out_img);
+  drawMatches(img1, kpts1, img2, kpts2, matches, out_img);
   imshow("Matches", out_img);
   waitKey(0);
   return 0;
