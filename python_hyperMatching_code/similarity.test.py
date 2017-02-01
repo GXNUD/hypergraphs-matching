@@ -17,8 +17,8 @@ def trans(p, tx, ty):
 
 
 if __name__ == '__main__':
-    p = [(1, 0), (3, 4), (5, 2)]
-    q = [trans(rot(pp, 56.43 * math.pi / 180), 2, -1) for pp in p]
+    p = [(0, 0), (1, 1), (-1, 1)]
+    q = [trans(rot(pp, 10 * math.pi / 180), 0, 0) for pp in p]
 
     print p
     print q
@@ -28,8 +28,9 @@ if __name__ == '__main__':
 
     xp, yp = zip(*p)
     xq, yq = zip(*q)
+    plt.gca().invert_yaxis()
     plt.plot(xp + (xp[0],), yp + (yp[0],), 'r-')
     plt.plot(xq + (xq[0],), yq + (yq[0],), 'b-')
-    plt.xlim((-3, 6))
-    plt.ylim((-3, 6))
+    plt.xlim((-5, 5))
+    plt.ylim((-5, 5))
     plt.show()
