@@ -34,6 +34,7 @@ def hyperedges(E1, E2, kpts1, kpts2, desc1, desc2, c1, c2, c3, th):
             sim_angles = sim.angles(p, q, sigma)
             sim_desc = sim.descriptors(dp, dq, sigma)
             similarity = c1 * sim_ratios + c2 * sim_angles + c3 * sim_desc
+
             # exit()
             if similarity > max_similarity:
                 best_index = j
@@ -51,6 +52,7 @@ def hyperedges(E1, E2, kpts1, kpts2, desc1, desc2, c1, c2, c3, th):
 
 def points(matches, desc1, desc2, E1, E2, th, sigma=0.5):
     matched_points = []
+    S = set()
     for mat in matches:
         __queryIdx = mat[0]
         __trainIdx = mat[1]
@@ -64,11 +66,8 @@ def points(matches, desc1, desc2, E1, E2, th, sigma=0.5):
         best_match = [s.index(max(s)) for s in sim_desc]
 
         for i, j in enumerate(best_match):
-            if sim_desc[i][j] >= th:
-                matched_points.append(
-                    cv2.DMatch(
-                        E1[__queryIdx][i], E2[__trainIdx][j], sim_desc[i][j]
-                    )
-                )
-
+            qI, tT = E1[__queryIdx][i], E2[__trainIdx][j]
+            if not (qI, tT) in S and sim_desc[i][j] >= th:
+                matched_points.append(cv2.DMatch(qI, tT, sim_desc[i][j]))
+                S.add((qI, tT))
     return matched_points

@@ -3,6 +3,7 @@ import numpy as np
 import random
 import cv2
 from hypergraph import Hypergraph
+from math import log
 import match
 
 
@@ -85,7 +86,7 @@ def draw_edges_match(matches, kp1, kp2, E1, E2, img1, img2):
         print "similarity        -> {}".format(mat[2])
         print "similarity ratios  : {}".format(mat[3])
         print "similarity angles  : {}".format(mat[4])
-        print "similarity desc    : {}".format(mat[5])
+        print "similarity desc    : {} {}".format(mat[5], - 0.5 * log(mat[5]))
 
         # cv2.line(out, (int(x1), int(y1)), (int(x2) + cols1, int(y2)),
         # (102, 255, 255), 1)
@@ -96,7 +97,7 @@ def draw_edges_match(matches, kp1, kp2, E1, E2, img1, img2):
     return out
 
 
-def draw_points_match(matches, kp1, kp2, img1, img2):
+def draw_points_match(matches, kp1, kp2, img1, img2, name='Matching'):
     (rows1, cols1) = img1.shape
     (rows2, cols2) = img2.shape
     out = np.zeros((max([rows1, rows2]), cols1 + cols2, 3), dtype='uint8')
@@ -116,10 +117,10 @@ def draw_points_match(matches, kp1, kp2, img1, img2):
         cv2.circle(out, (int(x1), int(y1)), 1, color, 3)
         cv2.circle(out, (int(x2) + cols1, int(y2)), 1, color, 3)
         cv2.line(out, (int(x1), int(y1)), (int(x2) + cols1, int(y2)), color, 1)
-    cv2.namedWindow('Matching', cv2.WINDOW_NORMAL)
-    cv2.imshow("Matching", out)
-    cv2.waitKey()
-    cv2.destroyWindow("Matching")
+    cv2.namedWindow(name, cv2.WINDOW_NORMAL)
+    cv2.imshow(name, out)
+    # cv2.waitKey()
+    # cv2.destroyWindow(name)
 
 
 def draw_triangulation(kp, E, img):
@@ -168,16 +169,12 @@ def draw_triangulation(kp, E, img):
 
 if __name__ == "__main__":
     M = 50
-    img1 = cv2.imread('./img/house.seq1.png')
-    img2 = cv2.imread('./img/house.seq27.png')
-
-    # Convert to gray
-    img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-    img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+    img1 = cv2.imread('./img/house.seq80.png', 0)
+    img2 = cv2.imread('./img/house.seq80.rot.png', 0)
 
     # Get features and distances between every pair of points from both images
-    (kpts1, des1) = get_features(img1_gray, M, 'target.jpg')
-    (kpts2, des2) = get_features(img2_gray, M, 'reference.jpg')
+    (kpts1, des1) = get_features(img1, M, 'target.jpg')
+    (kpts2, des2) = get_features(img2, M, 'reference.jpg')
 
     Hgt = Hypergraph(kpts1, des1)
     Hgr = Hypergraph(kpts2, des2)
@@ -186,15 +183,35 @@ if __name__ == "__main__":
 
     # Matching
     edge_matches = match.hyperedges(
-        Hgt.E, Hgr.E, kpts1, kpts2, des1, des2, 0, 0, 1, 0.7
+        Hgt.E, Hgr.E, kpts1, kpts2, des1, des2, 1, 1, 2, 0.4
     )
 
     print 'Hyperedges matching done'
 
-    point_matches = match.points(edge_matches, des1, des2, Hgt.E, Hgr.E, 0.7)
+    point_matches = match.points(edge_matches, des1, des2, Hgt.E, Hgr.E, 0.1)
+    point_matches = sorted(point_matches, key=lambda x: x.distance)
 
     # Show results
-    draw_edges_match(
-       edge_matches, kpts1, kpts2, Hgt.E, Hgr.E, img1_gray, img2_gray
+    # draw_edges_match(
+    #    edge_matches, kpts1, kpts2, Hgt.E, Hgr.E, img1, img2
+    # )
+    draw_points_match(point_matches, kpts1, kpts2, img1, img2)
+
+    bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+    matches = bf.match(des1, des2)
+    matches = sorted(matches, key=lambda x: x.distance)
+
+    draw_points_match(
+        matches[-len(point_matches):], kpts1, kpts2, img1, img2, 'cv2'
     )
-    draw_points_match(point_matches, kpts1, kpts2, img1_gray, img2_gray)
+
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+
+    print len(point_matches)
+    for p in point_matches:
+        print p.queryIdx, p.trainIdx, p.distance
+
+    print len(matches)
+    for p in matches:
+        print p.queryIdx, p.trainIdx, p.distance

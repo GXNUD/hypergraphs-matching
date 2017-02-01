@@ -24,7 +24,10 @@ if __name__ == '__main__':
     print q
     print sim.angles(p, q)
     print sim.ratios(p, q)
-    print sim.descriptors([1, 2, 3, 4], [2, 4, 1, 3])
+    print sim.descriptors(
+            [0.15249857,  0.15249857,  0.60999428,  0.76249285],
+            [0.36514837,  0.73029674,  0.18257419,  0.54772256]
+        )
 
     xp, yp = zip(*p)
     xq, yq = zip(*q)

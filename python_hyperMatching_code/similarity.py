@@ -13,8 +13,6 @@ def vectors_sin(pivot, p, q):
     return np.sin(angle)
 
 
-# def get_angles_sin(edge, kpts):
-#     p1, p2, p3 = kpts[edge[0]].pt, kpts[edge[1]].pt, kpts[edge[2]].pt
 def get_angles_sin(p):
     p1, p2, p3 = p
     alpha = vectors_sin(p1, p2, p3)  # sin of angle of vectors p2 - p1, p3 - p1
@@ -45,9 +43,6 @@ def angles(p, q, sigma=0.5):
     return similarity
 
 
-# def ratios(e1, e2, kpts1, kpts2, sigma=0.5):
-#     p = [np.array(kpts1[e1[i]].pt) for i in xrange(3)]
-#     q = [np.array(kpts2[e2[i]].pt) for i in xrange(3)]
 def ratios(p, q, sigma=0.5):
     dp = [
         LA.norm(np.subtract(p[i], p[j]))
@@ -75,15 +70,13 @@ def ratios(p, q, sigma=0.5):
     return similarity
 
 
-# def descriptors(e1, e2, desc1, desc2, sigma=0.5):
-#     p = [np.array(desc1[e1[i]]) for i in xrange(3)]
-#     q = [np.array(desc2[e2[i]]) for i in xrange(3)]
 def descriptors(p, q, sigma=0.5):
     perms = itertools.permutations(q)
 
     diffs = [
-        sum(LA.norm(np.subtract(qqi, pi)) for qqi, pi in zip(qq, p))
-        for qq in perms
+        # sum([LA.norm(np.subtract(qqi, pi)) for qqi, pi in zip(qq, p)])
+        # for qq in perms
+        sum([LA.norm(qqi - pi) for qqi, pi in zip(qq, p)]) for qq in perms
     ]
 
     min_diff = min(diffs)
