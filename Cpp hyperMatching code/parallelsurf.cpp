@@ -491,8 +491,8 @@ int main(int argc, const char *argv[]){
   // Mat dist2 = distancePoints(t_keypoints2);
 
   // Building hyperedges Matrices
-  // vector<vector<int> > Edges1 = delaunayTriangulation(img11, keypoints1);
-  // vector<vector<int> > Edges2 = delaunayTriangulation(img22, keypoints2);
+   vector<vector<int> > Edges1 = delaunayTriangulation(img11, keypoints1);
+   vector<vector<int> > Edges2 = delaunayTriangulation(img22, keypoints2);
 
   // TODO Hyperedge matching
   // vector<pair<int, int> > matches = matchHyperedges(Edges1, Edges2, keypoints1,
