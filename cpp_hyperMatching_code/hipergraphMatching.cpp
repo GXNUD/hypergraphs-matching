@@ -5,13 +5,13 @@
 
     @author Leiver Andres Campeón <leiverandres04p@hotmail.com>
     @author Yensy Helena Gomez <yensy@sirius.utp.edu.co>
-    @author Juan Sebastián Vega Patiño <>
+    @author Juan Sebastián Vega Patiño <sebas060495@gmail.com>
     @version 1.0 29/12/16
 */
 
-#include "iostream"
-#include "stdio.h"
-#include <math.h>
+#include <iostream>
+#include <cstdio>
+#include <cmath>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/nonfree/features2d.hpp>

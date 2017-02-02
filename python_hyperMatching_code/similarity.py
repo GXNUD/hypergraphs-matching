@@ -1,23 +1,23 @@
 from __future__ import division
-from math import exp
+from math import exp, sin
 from numpy import linalg as LA
 import numpy as np
 import itertools
 
 
-def vectors_sin(pivot, p, q):
+def vectors_angle_sin(pivot, p, q):
     V1 = np.subtract(p, pivot)
     V2 = np.subtract(q, pivot)
     dot = np.dot(V1, V2)
     angle = np.arccos(dot / (LA.norm(V1) * LA.norm(V2)))
-    return np.sin(angle)
+    return sin(angle)
 
 
 def get_angles_sin(p):
     p1, p2, p3 = p
-    alpha = vectors_sin(p1, p2, p3)  # sin of angle of vectors p2 - p1, p3 - p1
-    beta = vectors_sin(p2, p1, p3)  # sin of angle of vectors p1 - p2, p3 - p2
-    theta = vectors_sin(p3, p1, p2)  # sin of angle of vectors p1 - p3, p2 - p3
+    alpha = vectors_angle_sin(p1, p2, p3)
+    beta = vectors_angle_sin(p2, p1, p3)
+    theta = vectors_angle_sin(p3, p1, p2)
 
     return [alpha, beta, theta]
 
@@ -76,7 +76,8 @@ def descriptors(p, q, sigma=0.5):
     diffs = [
         # sum([LA.norm(np.subtract(qqi, pi)) for qqi, pi in zip(qq, p)])
         # for qq in perms
-        sum([LA.norm(qqi - pi) for qqi, pi in zip(qq, p)]) for qq in perms
+        sum([LA.norm(np.subtract(qqi, pi)) for qqi, pi in zip(qq, p)])
+        for qq in perms
     ]
 
     min_diff = min(diffs)
