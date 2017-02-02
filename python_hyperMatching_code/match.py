@@ -1,6 +1,6 @@
 from __future__ import division
 import cv2
-from math import exp
+from math import exp, log
 import numpy as np
 import similarity as sim
 
@@ -68,6 +68,8 @@ def points(matches, desc1, desc2, E1, E2, th, sigma=0.5):
         for i, j in enumerate(best_match):
             qI, tT = E1[__queryIdx][i], E2[__trainIdx][j]
             if not (qI, tT) in S and sim_desc[i][j] >= th:
-                matched_points.append(cv2.DMatch(qI, tT, sim_desc[i][j]))
+                matched_points.append(
+                    cv2.DMatch(qI, tT, -sigma * log(sim_desc[i][j]))
+                )
                 S.add((qI, tT))
     return matched_points

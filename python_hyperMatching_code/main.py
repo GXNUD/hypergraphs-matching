@@ -202,7 +202,7 @@ if __name__ == "__main__":
     matches = sorted(matches, key=lambda x: x.distance)
 
     draw_points_match(
-        matches[-len(point_matches):], kpts1, kpts2, img1, img2, 'cv2'
+        matches[:len(point_matches)], kpts1, kpts2, img1, img2, 'cv2'
     )
 
     cv2.waitKey()
