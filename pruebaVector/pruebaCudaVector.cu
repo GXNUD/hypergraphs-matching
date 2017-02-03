@@ -8,30 +8,31 @@
 using namespace std;
 
 
-__global__ void kernel_Sum(int *A, int *B, int *C, int N){
-  int idx = threadIdX.x +blockDim.x*blockIdx.x;
-  if(idx < N){
-    C[idx] = A[idx] + B[idx];
+__global__ void kernel_Sum(double *A, double *B, double *C, int N){
+  int i = blockDim.x * blockIdx.x + threadIdx.x;
+  if(i < N){
+    C[i] = A[i] + B[i];
   }
 
 }
 
 int main(int argc, char *argv[])
 {
-    char buffer[80];
+
     vector<double> a;
     double *ap = (double*)malloc((a.size())*sizeof(double));
     vector<double> b;
     double *bp = (double*)malloc((b.size())*sizeof(double));
     vector<double> c;
     double *cp = (double*)malloc((c.size())*sizeof(double));
-    int N = c.size();
+    int N = 3;
+    cout << N << '\n';
     // declaración de variables cuda para la GPU
     double *d_Ap, *d_Bp, *d_Cp;
 
-    cudaMalloc((void **)&dev_a , N*sizeof(double));
-    cudaMalloc((void **)&dev_a , N*sizeof(double));
-    cudaMalloc((void **)&dev_a , N*sizeof(double));
+    cudaMalloc((void **)&d_Ap , N*sizeof(double));
+    cudaMalloc((void **)&d_Bp , N*sizeof(double));
+    cudaMalloc((void **)&d_Cp , N*sizeof(double));
 
 
     a.push_back(999.25);
@@ -46,52 +47,40 @@ int main(int argc, char *argv[])
     c.push_back(0.0);
     c.push_back(0.0);
 
-    int threadsPerBlock = 512;
-    int blocksPerGrid =  ceil(double(N)/double(threadsPerBlock));
+    //int threadsPerBlock = 512;
+    //int blocksPerGrid =  ceil(double(N)/double(threadsPerBlock));
+    //
+    for(int i = 0; i< a.size(); i++){
+      ap[i]= a[i];
+      bp[i]= b[i];
+      cp[i]= c[i];
+    }
 
     cudaMemcpy (d_Ap, ap , N*sizeof(double),cudaMemcpyHostToDevice);
     cudaMemcpy (d_Bp, bp , N*sizeof(double),cudaMemcpyHostToDevice);
 
-    kernel_Sum<<<blocksPerGrid,threadsPerBlock>>>(d_Ap, d_Bp, d_Cp, N);
+    kernel_Sum <<<1,1>>>(d_Ap, d_Bp, d_Cp, N);
 
     cudaMemcpy (cp, d_Cp , N*sizeof(double),cudaMemcpyHostToDevice);
 
     for(int i = 0; i< N; i++){
       cout << cp[i] << '\n';
-      cout << "----PARALELO------" << endl;
     }
 
-    cudaFree(d_A);
-    cudaFree(d_B);
-    cudaFree(d_C);
+    cout << "---FINALIZA PARALELO-------" << endl;
 
-
-    for(int i = 0; i< a.size(); i++){
-      ap[i]= a[i];
-      bp[i]= b[i];
-      cp[i]= c[i];
-      cout << ap[i] << '\n';
-      cout << bp[i] << '\n';
-      cout << cp[i] << '\n';
-      cout << "----------" << endl;
-    }
-
-    cout << "----------" << endl;
-    for(int i = 0; i < c.size(); i++)
-    {
-        c[i]=a[i]+b[i];
-      cout << c[i] << endl;
-    }
-    cout << "----------" << endl;
     for(int i = 0; i < c.size(); i++)
     {
       cp[i]=ap[i]+bp[i];
       cout << cp[i] << endl;
     }
-    cout << "----------" << endl;
+    cout << "--FINALIZA SECUENCIAL------" << endl;
     free(ap);
     free(cp);
     free(bp);
+    cudaFree(d_Ap);
+    cudaFree(d_Bp);
+    cudaFree(d_Cp);
 
     return EXIT_SUCCESS;
 }

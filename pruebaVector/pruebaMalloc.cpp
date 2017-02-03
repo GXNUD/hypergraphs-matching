@@ -4,21 +4,21 @@
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
+#include <cuda.h>
 
 using namespace std;
 
 
-// __global__ void kernel_Sum(int *A, int *B, int *C, int N){
-//   int idx = threadIdX.x +blockDim.x*blockIdx.x;
-//   if(idx < N){
-//     C[idx] = A[idx] + B[idx];
-//   }
-//
-// }
+__global__ void kernel_Sum(int *A, int *B, int *C, int N){
+  int idx = threadIdX.x +blockDim.x*blockIdx.x;
+  if(idx < N){
+    C[idx] = A[idx] + B[idx];
+  }
+
+}
 
 int main(int argc, char *argv[])
 {
-    char buffer[80];
     vector<double> a;
     double *ap = (double*)malloc((a.size())*sizeof(double));
     vector<double> b;
@@ -27,11 +27,11 @@ int main(int argc, char *argv[])
     double *cp = (double*)malloc((c.size())*sizeof(double));
     int N = c.size();
     // declaración de variables cuda para la GPU
-    // double *d_Ap, *d_Bp, *d_Cp;
-    //
-    // cudaMalloc((void **)&dev_a , N*sizeof(double));
-    // cudaMalloc((void **)&dev_a , N*sizeof(double));
-    // cudaMalloc((void **)&dev_a , N*sizeof(double));
+    double *d_Ap, *d_Bp, *d_Cp;
+
+    cudaMalloc((void **)&dev_a , N*sizeof(double));
+    cudaMalloc((void **)&dev_a , N*sizeof(double));
+    cudaMalloc((void **)&dev_a , N*sizeof(double));
 
 
     a.push_back(999.25);
@@ -46,24 +46,24 @@ int main(int argc, char *argv[])
     c.push_back(0.0);
     c.push_back(0.0);
 
-    // int threadsPerBlock = 512;
-    // int blocksPerGrid =  ceil(double(N)/double(threadsPerBlock));
-    //
-    // cudaMemcpy (d_Ap, ap , N*sizeof(double),cudaMemcpyHostToDevice);
-    // cudaMemcpy (d_Bp, bp , N*sizeof(double),cudaMemcpyHostToDevice);
-    //
-    // kernel_Sum<<<blocksPerGrid,threadsPerBlock>>>(d_Ap, d_Bp, d_Cp, N);
-    //
-    // cudaMemcpy (cp, d_Cp , N*sizeof(double),cudaMemcpyHostToDevice);
-    //
-    // for(int i = 0; i< N; i++){
-    //   cout << cp[i] << '\n';
-    //   cout << "----PARALELO------" << endl;
-    // }
-    //
-    // cudaFree(d_A);
-    // cudaFree(d_B);
-    // cudaFree(d_C);
+    int threadsPerBlock = 512;
+    int blocksPerGrid =  ceil(double(N)/double(threadsPerBlock));
+
+    cudaMemcpy (d_Ap, ap , N*sizeof(double),cudaMemcpyHostToDevice);
+    cudaMemcpy (d_Bp, bp , N*sizeof(double),cudaMemcpyHostToDevice);
+
+    kernel_Sum<<<blocksPerGrid,threadsPerBlock>>>(d_Ap, d_Bp, d_Cp, N);
+
+    cudaMemcpy (cp, d_Cp , N*sizeof(double),cudaMemcpyHostToDevice);
+
+    for(int i = 0; i< N; i++){
+      cout << cp[i] << '\n';
+      cout << "----PARALELO------" << endl;
+    }
+
+    cudaFree(d_Ap);
+    cudaFree(d_Bp);
+    cudaFree(d_Cp);
 
 
     for(int i = 0; i< a.size(); i++){
