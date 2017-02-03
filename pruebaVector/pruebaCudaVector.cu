@@ -25,16 +25,10 @@ int main(int argc, char *argv[])
     double *bp = (double*)malloc((b.size())*sizeof(double));
     vector<double> c;
     double *cp = (double*)malloc((c.size())*sizeof(double));
-    int N = 3;
-    cout << N << '\n';
+
     // declaración de variables cuda para la GPU
     double *d_Ap, *d_Bp, *d_Cp;
-
-    cudaMalloc((void **)&d_Ap , N*sizeof(double));
-    cudaMalloc((void **)&d_Bp , N*sizeof(double));
-    cudaMalloc((void **)&d_Cp , N*sizeof(double));
-
-
+    
     a.push_back(999.25);
     a.push_back(888.50);
     a.push_back(777.25);
@@ -42,10 +36,16 @@ int main(int argc, char *argv[])
     b.push_back(999.25);
     b.push_back(888.50);
     b.push_back(777.25);
+    c.push_back(0.0);
+    c.push_back(0.0);
+    c.push_back(0.0);
 
-    c.push_back(0.0);
-    c.push_back(0.0);
-    c.push_back(0.0);
+    int N = c.size();
+    cout << N << '\n';
+
+    cudaMalloc((void **)&d_Ap , N*sizeof(double));
+    cudaMalloc((void **)&d_Bp , N*sizeof(double));
+    cudaMalloc((void **)&d_Cp , N*sizeof(double));
 
     //int threadsPerBlock = 512;
     //int blocksPerGrid =  ceil(double(N)/double(threadsPerBlock));
@@ -55,6 +55,13 @@ int main(int argc, char *argv[])
       bp[i]= b[i];
       cp[i]= c[i];
     }
+
+    for(int i = 0; i < c.size(); i++)
+    {
+      cp[i]=ap[i]+bp[i];
+      cout << cp[i] << endl;
+    }
+    cout << "--FINALIZA SECUENCIAL------" << endl;
 
     cudaMemcpy (d_Ap, ap , N*sizeof(double),cudaMemcpyHostToDevice);
     cudaMemcpy (d_Bp, bp , N*sizeof(double),cudaMemcpyHostToDevice);
@@ -69,12 +76,7 @@ int main(int argc, char *argv[])
 
     cout << "---FINALIZA PARALELO-------" << endl;
 
-    for(int i = 0; i < c.size(); i++)
-    {
-      cp[i]=ap[i]+bp[i];
-      cout << cp[i] << endl;
-    }
-    cout << "--FINALIZA SECUENCIAL------" << endl;
+
     free(ap);
     free(cp);
     free(bp);
