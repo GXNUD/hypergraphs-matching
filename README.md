@@ -14,12 +14,18 @@ g++ -std=c++11 `pkg-config --cflags --libs opencv` hipergraphMatching.cpp -o hip
 ```sh
 g++ -std=c++11 `pkg-config --cflags opencv` hipergraphMatching.cpp `pkg-config --libs opencv` -o hiper.out
 ```
-#lanzar antes de compilar un programa en cuda 
+#Lanzar antes de compilar un programa en cuda 
 ```sh
 export PATH=/usr/local/cuda-8.0/bin${PATH:+:${PATH}}
 ```
 ##&
-```sh
+```
 $ export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64\
                          ${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 ```
+#Compilar en CUDA
+```sh
+nvcc programa.cu -o programa
+```
+
+
