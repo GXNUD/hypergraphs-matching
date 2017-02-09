@@ -30,8 +30,8 @@ def get_features(img, limit=None, outname='sample.jpg', show=False):
     kp, des = descriptor.compute(img, kp)
     img_to_write = np.zeros(img.shape)
     img_to_write = cv2.drawKeypoints(img, kp[:limit], img_to_write)
-    cv2.imwrite(outname, img_to_write)
     if show:
+        cv2.imwrite(outname, img_to_write)
         cv2.namedWindow('Keypoints')  # , cv2.WINDOW_NORMAL)
         cv2.imshow('Keypoints', img_to_write)
         cv2.waitKey()
@@ -101,9 +101,10 @@ def draw_points_match(matches, kp1, kp2, img1, img2, name='Matching'):
     (rows1, cols1) = img1.shape
     (rows2, cols2) = img2.shape
     out = np.zeros((max([rows1, rows2]), cols1 + cols2, 3), dtype='uint8')
-    out[:rows1, :cols1] = np.dstack([img1, img1, img1])
-    out[:rows2, cols1:] = np.dstack([img2, img2, img2])
     for mat in matches:
+        out[:rows1, :cols1] = np.dstack([img1, img1, img1])
+        out[:rows2, cols1:] = np.dstack([img2, img2, img2])
+
         __queryIdx = mat.queryIdx
         __trainIdx = mat.trainIdx
 
@@ -117,10 +118,11 @@ def draw_points_match(matches, kp1, kp2, img1, img2, name='Matching'):
         cv2.circle(out, (int(x1), int(y1)), 1, color, 3)
         cv2.circle(out, (int(x2) + cols1, int(y2)), 1, color, 3)
         cv2.line(out, (int(x1), int(y1)), (int(x2) + cols1, int(y2)), color, 1)
-    cv2.namedWindow(name, cv2.WINDOW_NORMAL)
-    cv2.imshow(name, out)
-    # cv2.waitKey()
-    # cv2.destroyWindow(name)
+        cv2.namedWindow(name, cv2.WINDOW_NORMAL)
+        cv2.imshow(name, out)
+        cv2.waitKey()
+        cv2.destroyWindow(name)
+
 
 
 def draw_triangulation(kp, E, img):
@@ -166,8 +168,43 @@ def draw_triangulation(kp, E, img):
     ##     ## ##     ## #### ##    ##
 '''
 
+def scale(img1, factor):
+    M = 20
+    img2 = cv2.resize(img1, None,fx=factor, fy=factor, interpolation=cv2.INTER_LINEAR)
 
-if __name__ == "__main__":
+    # Get features and distances between every pair of points from both images
+    (kpts1, des1) = get_features(img1, M)
+    (kpts2, des2) = get_features(img2, M)
+
+    Hgt = Hypergraph(kpts1, des1)
+    Hgr = Hypergraph(kpts2, des2)
+
+    # Matching
+    c1 = 1
+    c2 = 1
+    c3 = 2
+    th = 0.4
+    edge_matches = match.hyperedges(
+        Hgt.E, Hgr.E, kpts1, kpts2, des1, des2, c1, c2, c3, th
+    )
+
+    point_matches = match.points(edge_matches, des1, des2, Hgt.E, Hgr.E, 0.1)
+    point_matches = sorted(point_matches, key=lambda x: x.distance)
+
+    print 'LYSH', len(point_matches)
+    draw_points_match(point_matches, kpts1, kpts2, img1, img2, 'LYSH')
+
+    bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+    matches = bf.match(des1, des2)
+    matches = sorted(matches, key=lambda x: x.distance)
+
+    print 'BFORCE', len(matches)
+    draw_points_match(matches[:M], kpts1, kpts2, img1, img2, 'cv2 BForce')
+
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+
+def main():
     M = 20
     img1 = cv2.imread('./img/house.seq80.png', 0)
     img2 = cv2.imread('./img/house.seq80.rot.png', 0)
@@ -191,10 +228,6 @@ if __name__ == "__main__":
     point_matches = match.points(edge_matches, des1, des2, Hgt.E, Hgr.E, 0.1)
     point_matches = sorted(point_matches, key=lambda x: x.distance)
 
-    # Show results
-    # draw_edges_match(
-    #    edge_matches, kpts1, kpts2, Hgt.E, Hgr.E, img1, img2
-    # )
     draw_points_match(point_matches, kpts1, kpts2, img1, img2)
 
     bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
@@ -215,3 +248,9 @@ if __name__ == "__main__":
     print len(matches)
     for p in matches:
         print p.queryIdx, p.trainIdx, p.distance
+
+if __name__ == "__main__":
+    img1 = cv2.imread('./img/house.seq80.png', 0)
+    for n in xrange(-5, 6):
+        print 'Scale {}'.format(n)
+        scale(img1, pow(1.1, n))
