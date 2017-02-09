@@ -16,21 +16,6 @@ class Hypergraph():
         '''
         builds the hyperedges using the 2 nearest neighbors of each point
         '''
-        # E = []
-        # n = len(kpts)
-        # dist = np.zeros((n, n))
-        # W = compute_w_parameter(self.kpts)
-        # print "W: ", W
-        #
-        # for i, r in enumerate(kpts):
-        #     for j, l in enumerate(kpts):
-        #         dist[i][j] = self.__euclideanDistance(r, l)
-        # for i, values in enumerate(dist):
-        #     min1, min2 = self.__getMinValues(values, i)
-        #     # edge_weigth = hyperedge_weigth((i, min1, min2), 1, self.kpts)
-        #     E.append((i, min1, min2))
-        #
-        # return E
         x, y = zip(*[k.pt for k in kpts])
         triangulation = tri.Triangulation(x, y)
 

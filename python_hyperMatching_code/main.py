@@ -168,7 +168,7 @@ def draw_triangulation(kp, E, img):
 
 
 if __name__ == "__main__":
-    M = 50
+    M = 20
     img1 = cv2.imread('./img/house.seq80.png', 0)
     img2 = cv2.imread('./img/house.seq80.rot.png', 0)
 
