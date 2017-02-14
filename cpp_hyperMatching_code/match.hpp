@@ -67,7 +67,7 @@ namespace match {
         return dist;
     }
 
-    vector<DMatch> matchPoints(
+    vector<DMatch> points(
         vector<pair<int, int> > edge_matches,
         Mat &desc1, Mat &desc2,
         vector<vector<int> > &edges1, vector<vector<int> > &edges2,
@@ -110,7 +110,6 @@ namespace match {
                 }
             }
         }
-
         return matches;
     }
 }

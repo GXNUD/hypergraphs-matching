@@ -124,7 +124,6 @@ def draw_points_match(matches, kp1, kp2, img1, img2, name='Matching'):
         cv2.destroyWindow(name)
 
 
-
 def draw_triangulation(kp, E, img):
     rows, cols = img.shape
     out = np.zeros((rows, cols, 3), dtype='uint8')
@@ -168,9 +167,12 @@ def draw_triangulation(kp, E, img):
     ##     ## ##     ## #### ##    ##
 '''
 
+
 def scale(img1, factor):
     M = 20
-    img2 = cv2.resize(img1, None,fx=factor, fy=factor, interpolation=cv2.INTER_LINEAR)
+    img2 = cv2.resize(
+        img1, None, fx=factor, fy=factor, interpolation=cv2.INTER_LINEAR
+    )
 
     # Get features and distances between every pair of points from both images
     (kpts1, des1) = get_features(img1, M)
@@ -203,6 +205,7 @@ def scale(img1, factor):
 
     cv2.waitKey()
     cv2.destroyAllWindows()
+
 
 def main():
     M = 20
@@ -248,6 +251,7 @@ def main():
     print len(matches)
     for p in matches:
         print p.queryIdx, p.trainIdx, p.distance
+
 
 if __name__ == "__main__":
     img1 = cv2.imread('./img/house.seq80.png', 0)
