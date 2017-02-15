@@ -132,40 +132,6 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
 }
 
 /*
-* Algoritmo de los k vecinos más cercanos, esto nos permitira conocer
-* los indices de la matrix de los vecinos más cercanos,
-* para hacer el hipergrafo de la img1 como de img2
-*/
-Mat KNN(Mat &matEucl) {
-  Mat indices(matEucl.rows, 3, DataType<int>::type);
-  float minDist = 10e6;
-  int minIdx1 = -1;
-  int minIdx2 = -1;
-  for (int i = 0; i < matEucl.rows; i++) {
-    for (int j = 0; j < matEucl.cols; j++) {
-      if ((matEucl.at<float>(i, j) <= minDist) && (j != i)) {
-        minDist = matEucl.at<float>(i, j);
-        minIdx1 = j;
-      }
-    }
-    minDist = 1e6;
-    for (int j = 0; j < matEucl.cols; j++) {
-      if ((matEucl.at<float>(i, j) <= minDist) && (j != minIdx1) && (j != i)) {
-        minDist = matEucl.at<float>(i, j);
-        minIdx2 = j;
-      }
-    }
-    cout << "Indice0: " << i << " "
-         << "indice1: " << minIdx1 << " "
-         << "indice2: " << minIdx2 << endl;
-    indices.at<int>(i, 0) = i;
-    indices.at<int>(i, 1) = minIdx1;
-    indices.at<int>(i, 2) = minIdx2;
-  }
-  return indices;
-}
-
-/*
 ##     ##    ###    #### ##    ##
 ###   ###   ## ##    ##  ###   ##
 #### ####  ##   ##   ##  ####  ##
