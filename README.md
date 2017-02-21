@@ -42,7 +42,7 @@ gprof hiper.out gmon.out > analysis.txt
 ```
 #Crear gráfico 
 ```sh
-perf record -g -- ./test_gprof 
+perf record -g -- ./hiper.out 
 ```
 ##guardar en png
 ```sh
