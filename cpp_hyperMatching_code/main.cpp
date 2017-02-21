@@ -142,9 +142,8 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
 */
 
 int main(int argc, const char *argv[]) {
-  Mat img1 = imread("./house/house.seq0.png", 0);
-  Mat img2 = imread("./house/house.seq0.trans.png", 0);
-  Mat out_img;
+  Mat img1 = imread("./test-images/quijote1s.JPG", 0);
+  Mat img2 = imread("./test-images/quijote1m.JPG", 0);
 
   // For Surf detection
   int minHessian = 400;
@@ -154,6 +153,10 @@ int main(int argc, const char *argv[]) {
   vector<KeyPoint> kpts1, kpts2;
   detector.detect(img1, kpts1);
   detector.detect(img2, kpts2);
+
+  cout << endl << kpts1.size() << " Keypoints Detected in image 1" << endl;
+  cout << endl << kpts2.size() << " Keypoints Detected in image 2" << endl;
+
   sort(kpts1.begin(), kpts1.end(), responseCMP);
   sort(kpts2.begin(), kpts2.end(), responseCMP);
 
@@ -165,45 +168,50 @@ int main(int argc, const char *argv[]) {
   SurfDescriptorExtractor extractor;
   // SiftDescriptorExtractor extractor;
   Mat descriptor1, descriptor2;
-  extractor.compute(img1, t_kpts1, descriptor1);
-  extractor.compute(img2, t_kpts2, descriptor2);
+  extractor.compute(img1, kpts1, descriptor1);
+  extractor.compute(img2, kpts2, descriptor2);
 
   // Add results to an image and save them.
   Mat output1;
   Mat output2;
 
-  drawKeypoints(img1, t_kpts1, output1);
+  drawKeypoints(img1, kpts1, output1);
   imwrite("surf_result1.jpg", output1);
-  drawKeypoints(img2, t_kpts2, output2);
+  drawKeypoints(img2, kpts2, output2);
   imwrite("surf_result2.jpg", output2);
 
   // Building hyperedges Matrices
-  vector<vector<int> > Edges1 = delaunayTriangulation(img1, t_kpts1);
-  vector<vector<int> > Edges2 = delaunayTriangulation(img2, t_kpts2);
+  cout << endl << "Triangulating ..." << endl;
+  vector<vector<int> > Edges1 = delaunayTriangulation(img1, kpts1);
+  vector<vector<int> > Edges2 = delaunayTriangulation(img2, kpts2);
 
-  cout << "Matching ..." << endl;
+  cout << endl << "Triangulation Done." << endl;
+  cout << Edges1.size() << " Edges from image 1" << endl;
+  cout << Edges2.size() << " Edges from image 2" << endl;
+  cout << endl << "Matching ..." << endl;
 
   vector<pair<int, int> > edge_matches = match::hyperedges(Edges1, Edges2,
-                                                           t_kpts1,
-                                                           t_kpts2,
+                                                           kpts1,
+                                                           kpts2,
                                                            descriptor1,
-                                                           descriptor2, 5, 10,
-                                                           5, 0.85);
+                                                           descriptor2, 10, 10,
+                                                           3, 0.75);
 
+  cout << endl << "Edges Matching done. ";
+  cout << edge_matches.size() << " edge matches passed!" << endl;
 
   vector<DMatch> matches = match::points(edge_matches, descriptor1, descriptor2,
                                          Edges1, Edges2, 0.1);
 
-  cout << "Matching Done!" << endl;
+  cout << endl << "Point Matching Done. ";
+  cout << matches.size() << " Point matches passed" << endl;
 
   // Draw Edges matching
   // draw::edgesMatch(
-  //   img1, img2, edge_matches, Edges1, Edges2, t_kpts1, t_kpts2
+  //   img1, img2, edge_matches, Edges1, Edges2, kpts1, kpts2
   // );
 
   // Draw Point matching
-  drawMatches(img1, t_kpts1, img2, t_kpts2, matches, out_img);
-  imshow("Matches", out_img);
-  waitKey(0);
+  draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
   return 0;
 }
