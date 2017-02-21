@@ -34,6 +34,8 @@ namespace draw {
         }
       }
       // cout << "[drawDelaunay] " <<count_outliers << " points are not in rect" << endl;
+      namedWindow("Delaunay Triangulation", WINDOW_NORMAL);
+      resizeWindow("Delaunay Triangulation", 800, 900);
       imshow("Delaunay Triangulation", img_out);
       waitKey(0);
     }
@@ -42,7 +44,7 @@ namespace draw {
                         vector<vector<int> > &edge1, vector<vector<int> > &edge2,
                         vector<KeyPoint> &kpts1, vector<KeyPoint> &kpts2) {
       Mat img_aux, img_out;
-
+      namedWindow("Hyperedge Matching", WINDOW_NORMAL);
       for (int i = 0; i < matches.size(); i++) {
         hconcat(img1, img2, img_aux);
         cvtColor(img_aux, img_out, CV_GRAY2RGB);
@@ -65,5 +67,15 @@ namespace draw {
         imshow("Hyperedge Matching", img_out);
         waitKey(0);
       }
+    }
+
+    void pointsMatch(Mat &img1, vector<KeyPoint> &kpts1, Mat &img2, 
+                     vector<KeyPoint> &kpts2, vector<DMatch> &matches) {
+        Mat out_img;
+        namedWindow("Matches", WINDOW_NORMAL);
+        drawMatches(img1, kpts1, img2, kpts2, matches, out_img);
+        resizeWindow("Matches", 800, 900);
+        imshow("Matches", out_img);
+        waitKey(0);
     }
 }
