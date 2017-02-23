@@ -69,7 +69,7 @@ namespace draw {
       }
     }
 
-    void pointsMatch(Mat &img1, vector<KeyPoint> &kpts1, Mat &img2, 
+    void pointsMatch(Mat &img1, vector<KeyPoint> &kpts1, Mat &img2,
                      vector<KeyPoint> &kpts2, vector<DMatch> &matches) {
         Mat out_img;
         namedWindow("Matches", WINDOW_NORMAL);

@@ -142,8 +142,8 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
 */
 
 int main(int argc, const char *argv[]) {
-  Mat img1 = imread("./test-images/quijote1s.JPG", 0);
-  Mat img2 = imread("./test-images/quijote1m.JPG", 0);
+  Mat img1 = imread("./test-images/monster1s.JPG", 0);
+  Mat img2 = imread("./test-images/monster1m.JPG", 0);
 
   // For Surf detection
   int minHessian = 400;
@@ -175,10 +175,11 @@ int main(int argc, const char *argv[]) {
   Mat output1;
   Mat output2;
 
-  drawKeypoints(img1, kpts1, output1);
-  imwrite("surf_result1.jpg", output1);
-  drawKeypoints(img2, kpts2, output2);
-  imwrite("surf_result2.jpg", output2);
+  // Save images with keypoints
+  // drawKeypoints(img1, kpts1, output1);
+  // imwrite("surf_result1.jpg", output1);
+  // drawKeypoints(img2, kpts2, output2);
+  // imwrite("surf_result2.jpg", output2);
 
   // Building hyperedges Matrices
   cout << endl << "Triangulating ..." << endl;
@@ -204,7 +205,7 @@ int main(int argc, const char *argv[]) {
                                          Edges1, Edges2, 0.1);
 
   cout << endl << "Point Matching Done. ";
-  cout << matches.size() << " Point matches passed" << endl;
+  cout << matches.size() << " Point matches passed!" << endl;
 
   // Draw Edges matching
   // draw::edgesMatch(
