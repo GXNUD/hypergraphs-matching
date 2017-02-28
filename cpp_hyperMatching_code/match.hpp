@@ -15,14 +15,14 @@ namespace match {
                                         vector<KeyPoint> &kp1,
                                         vector<KeyPoint> &kp2,
                                         Mat &desc1, Mat &desc2,
-                                        double c1, double c2, double c3,
+                                        double cang, double crat, double cdesc,
                                         double thresholding) {
         double sigma = 0.5;
         vector< pair<int, int> > matches;
-        double _sum = c1 + c2 + c3;
-        c1 /= _sum;
-        c2 /= _sum;
-        c3 /= _sum;
+        double _sum = cang + crat + cdesc;
+        cang /= _sum;
+        crat /= _sum;
+        cdesc /= _sum;
 
         for (int i = 0; i < edges1.size(); i++) {
             int best_match_idx = -1;
@@ -42,8 +42,8 @@ namespace match {
                 double sim_angles = sim::angles(e1_points, e2_points, sigma);
                 double sim_ratios = sim::ratios(e1_points, e2_points, sigma);
                 double sim_desc = sim::descriptors(des_1, des_2, sigma);
-                double similarity = c1 * sim_ratios + c2 * sim_angles +
-                                    c3 * sim_desc;
+                double similarity = cang * sim_angles + crat * sim_ratios +
+                                    cdesc * sim_desc;
 
                 if (similarity > max_similarity) {
                     best_match_idx = j;

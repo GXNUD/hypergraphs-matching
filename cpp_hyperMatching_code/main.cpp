@@ -12,6 +12,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cmath>
+#include <getopt.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/nonfree/features2d.hpp>
 #include "match.hpp"
@@ -141,9 +142,9 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
 ##     ## ##     ## #### ##    ##
 */
 
-int main(int argc, const char *argv[]) {
-  Mat img1 = imread("./test-images/monster1s.JPG", 0);
-  Mat img2 = imread("./test-images/monster1m.JPG", 0);
+void do_match(Mat &img1, Mat &img2, double cang, double crat, double cdesc) {
+  // Mat img1 = imread("./test-images/monster1s.JPG", 0);
+  // Mat img2 = imread("./test-images/monster1m.JPG", 0);
 
   // For Surf detection
   int minHessian = 400;
@@ -191,18 +192,19 @@ int main(int argc, const char *argv[]) {
   cout << Edges2.size() << " Edges from image 2" << endl;
   cout << endl << "Matching ..." << endl;
 
-  vector<pair<int, int> > edge_matches = match::hyperedges(Edges1, Edges2,
-                                                           kpts1,
-                                                           kpts2,
-                                                           descriptor1,
-                                                           descriptor2, 10, 10,
-                                                           3, 0.75);
+  vector<pair<int, int> > edge_matches = match::hyperedges(
+    Edges1, Edges2,
+    kpts1, kpts2,
+    descriptor1, descriptor2,
+    cang, crat, cdesc, 0.40
+  );
 
   cout << endl << "Edges Matching done. ";
   cout << edge_matches.size() << " edge matches passed!" << endl;
 
-  vector<DMatch> matches = match::points(edge_matches, descriptor1, descriptor2,
-                                         Edges1, Edges2, 0.1);
+  vector<DMatch> matches = match::points(
+    edge_matches, descriptor1, descriptor2,  Edges1, Edges2, 0.1
+  );
 
   cout << endl << "Point Matching Done. ";
   cout << matches.size() << " Point matches passed!" << endl;
@@ -214,5 +216,68 @@ int main(int argc, const char *argv[]) {
 
   // Draw Point matching
   draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
+}
+
+void usage(char* program_name) {
+    // opts = ['--cang', '--crat', '--cdesc']
+    // description = [
+    //     'Constant of angle similarity (default: 1)',
+    //     'Constant of ratio similarity (default: 1)',
+    //     'Constant of SURF descriptor similarity (default: 1)'
+    // ]
+    //
+    // print 'Usage: {} [options ...] img1 img2'.format(sys.argv[0])
+    // print
+    // print 'Matching options:'
+    // for o, d in zip(opts, description):
+    //     print '  {}: {}'.format(o, d)
+    // sys.exit(2)
+  int n = 3;
+  string opts[] = {"--cang", "--crat", "--cdesc"};
+  string description[] = {
+    "Constant of angle similarity (default: 1)",
+    "Constant of ratio similarity (default: 1)",
+    "Constant of SURF descriptor similarity (default: 1)"
+  };
+
+  cout << "Usage: " << program_name << " [options ...] img1 img2" << endl;
+  cout << endl;
+  cout << "Matching options" << endl;
+  for (int i = 0; i < n; i++) {
+    cout << "  " << opts[i] << ": " << description[i] << endl;
+  }
+
+  exit(EXIT_FAILURE);
+}
+
+int main(int argc, char *argv[]) {
+  int opt, opt_index = 0;
+  static struct option options[] = {
+    {"cang", required_argument, 0, 'a'},
+    {"crat", required_argument, 0, 'r'},
+    {"cdesc", required_argument, 0, 'd'},
+    {0, 0, 0, 0}
+  };
+
+  double cang = 1, crat = 1, cdesc = 1;
+  while ((opt = getopt_long(argc, argv, "a:r:d:", options, &opt_index)) != -1) {
+    switch (opt) {
+      case 'a':
+        cang = atof(optarg);
+        break;
+      case 'r':
+        crat = atof(optarg);
+        break;
+      case 'd':
+        cdesc = atof(optarg);
+        break;
+      default:
+        usage(argv[0]);
+        break;
+    }
+  }
+
+  cout << cang << " " << crat << " " << cdesc << endl;
+
   return 0;
 }
