@@ -14,11 +14,14 @@
 #include <cmath>
 #include <opencv2/core/core.hpp>
 #include <opencv2/nonfree/features2d.hpp>
+#include <opencv2/nonfree/gpu.hpp>
 #include "match.hpp"
 #include "draw.hpp"
+#include <time.h>
 
 using namespace cv;
 using namespace std;
+using namespace cv::gpu;
 
 
 /*
@@ -142,44 +145,39 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
 */
 
 int main(int argc, const char *argv[]) {
-  Mat img1 = imread("./test-images/monster1s.JPG", 0);
-  Mat img2 = imread("./test-images/monster1m.JPG", 0);
+
+  clock_t begin = clock();
+  GpuMat d_img1( imread("./test-images/monster1s.JPG", 0) );
+  GpuMat d_img2( imread("./test-images/monster1m.JPG", 0) );
+
+
+  Mat img1 = imread("./test-images/monster1s.JPG",0);
+  Mat img2 = imread("./test-images/monster1m.JPG",0);
 
   // For Surf detection
   int minHessian = 400;
 
-  SurfFeatureDetector detector(minHessian);
-  // SiftFeatureDetector detector(0.05, 5.0);
+  SURF_GPU surf(minHessian);
+  GpuMat d_kpts1, d_kpts2;
+  GpuMat d_descriptor1, d_descriptor2;
+  surf(d_img1, GpuMat(), d_kpts1, d_descriptor1);
+  surf(d_img2, GpuMat(), d_kpts2, d_descriptor2);
+
   vector<KeyPoint> kpts1, kpts2;
-  detector.detect(img1, kpts1);
-  detector.detect(img2, kpts2);
-
-  cout << endl << kpts1.size() << " Keypoints Detected in image 1" << endl;
-  cout << endl << kpts2.size() << " Keypoints Detected in image 2" << endl;
-
-  sort(kpts1.begin(), kpts1.end(), responseCMP);
-  sort(kpts2.begin(), kpts2.end(), responseCMP);
-
-  // Test vectors with less points
-  int limit = 20;
-  vector<KeyPoint> t_kpts1(kpts1.begin(), kpts1.begin() + limit);
-  vector<KeyPoint> t_kpts2(kpts2.begin(), kpts2.begin() + limit);
-
-  SurfDescriptorExtractor extractor;
-  // SiftDescriptorExtractor extractor;
   Mat descriptor1, descriptor2;
-  extractor.compute(img1, kpts1, descriptor1);
-  extractor.compute(img2, kpts2, descriptor2);
 
-  // Add results to an image and save them.
-  Mat output1;
-  Mat output2;
+  surf.downloadKeypoints(d_kpts1, kpts1);
+  surf.downloadKeypoints(d_kpts2, kpts2);
 
-  // Save images with keypoints
-  // drawKeypoints(img1, kpts1, output1);
-  // imwrite("surf_result1.jpg", output1);
-  // drawKeypoints(img2, kpts2, output2);
-  // imwrite("surf_result2.jpg", output2);
+  d_descriptor1.download(descriptor1);
+  d_descriptor2.download(descriptor2);
+  clock_t end = clock();
+  double time_spent = (double)(end-begin) / CLOCKS_PER_SEC;
+
+  cout << endl << "Surf execution time: " << time_spent << "s" << endl;
+
+  cout << endl << kpts1.size() << " Keypoints Detected in image 1 " << endl;
+  cout << endl << kpts2.size() << " Keypoints Detected in image 2 " << endl;
 
   // Building hyperedges Matrices
   cout << endl << "Triangulating ..." << endl;
@@ -206,11 +204,6 @@ int main(int argc, const char *argv[]) {
 
   cout << endl << "Point Matching Done. ";
   cout << matches.size() << " Point matches passed!" << endl;
-
-  // Draw Edges matching
-  // draw::edgesMatch(
-  //   img1, img2, edge_matches, Edges1, Edges2, kpts1, kpts2
-  // );
 
   // Draw Point matching
   draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
