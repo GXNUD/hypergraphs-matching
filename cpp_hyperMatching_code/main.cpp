@@ -179,6 +179,9 @@ int main(int argc, const char *argv[]) {
   cout << endl << kpts1.size() << " Keypoints Detected in image 1 " << endl;
   cout << endl << kpts2.size() << " Keypoints Detected in image 2 " << endl;
 
+  sort(kpts1.begin(), kpts1.end(), responseCMP);
+  sort(kpts2.begin(), kpts2.end(), responseCMP);
+
   // Building hyperedges Matrices
   cout << endl << "Triangulating ..." << endl;
   vector<vector<int> > Edges1 = delaunayTriangulation(img1, kpts1);
