@@ -2,9 +2,12 @@
 
 ## Test 1
 * Edge Matching Parameters:
-  * c1=1, c2=1, c3=2 th=0.4
+  * c1 = 1
+  * c2 = 1
+  * c3 = 2
+  * th = 0.4
 * Points Matching Parameters:
-  * th=0.1
+  * th = 0.1
 * Image = "house.seq80.png"
 
 |Scale factor |BForce (%)|LYSH (%)|

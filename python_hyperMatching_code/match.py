@@ -5,7 +5,7 @@ import numpy as np
 import similarity as sim
 
 
-def hyperedges(E1, E2, kpts1, kpts2, desc1, desc2, c1, c2, c3, th):
+def hyperedges(E1, E2, kpts1, kpts2, desc1, desc2, cang, crat, cdesc, th):
     '''
     E1, E2: hyperedges lists of img1 and img2, respectly
     '''
@@ -13,10 +13,10 @@ def hyperedges(E1, E2, kpts1, kpts2, desc1, desc2, c1, c2, c3, th):
     # indices_taken = []
     matches = []
 
-    s = sum([c1, c2, c3])
-    c1 /= s
-    c2 /= s
-    c3 /= s
+    s = cang + crat + cdesc
+    cang /= s
+    crat /= s
+    cdesc /= s
 
     for i, e_i in enumerate(E1):
         best_index = -float('inf')
@@ -33,12 +33,11 @@ def hyperedges(E1, E2, kpts1, kpts2, desc1, desc2, c1, c2, c3, th):
             sim_ratios = sim.ratios(p, q, sigma)
             sim_angles = sim.angles(p, q, sigma)
             sim_desc = sim.descriptors(dp, dq, sigma)
-            similarity = c1 * sim_ratios + c2 * sim_angles + c3 * sim_desc
+            _sim = cang * sim_angles + crat * sim_ratios + cdesc * sim_desc
 
-            # exit()
-            if similarity > max_similarity:
+            if _sim > max_similarity:
                 best_index = j
-                max_similarity = similarity
+                max_similarity = _sim
                 s_ratios = sim_ratios
                 s_ang = sim_angles
                 s_desc = sim_desc
