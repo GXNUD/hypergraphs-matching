@@ -29,14 +29,19 @@ __global__ int d_hyperedges (int *edges1, int *edges2,
             d_Mat des_1[3], des_2[3];
             #pragma unroll
             for (int k = 0; k < SIZE; k++){
-                e1_points[k].x = kp1[edges1[i*WIDTH_EDGES+k]].x;
-                e1_points[k].y = kp1[edges1[i*WIDTH_EDGES+k]].y;
-                e2_points[k].x = kp2[edges2[i*WIDTH_EDGES+k]].x;
-                e2_points[k].y = kp2[edges2[i*WIDTH_EDGES+k]].y;
-                des_1[k] = desc1.
-
-
+                e1_points[k].x = kp1[edges1[i*WIDTH_EDGES1+k]].x;
+                e1_points[k].y = kp1[edges1[i*WIDTH_EDGES1+k]].y;
+                e2_points[k].x = kp2[edges2[i*WIDTH_EDGES2+k]].x;
+                e2_points[k].y = kp2[edges2[i*WIDTH_EDGES2+k]].y;
+                for(int h = 0; h < desc1Size; h++)
+                    des_1[k] = desc1[edges1[i*WIDTH_EDGES1+h]];
+                for(h = 0; h < desc2Size; h++)
+                    des_2[k] = desc2[edges2[i*WIDTH_EDGES2+h]];
             }
+            double sim_angles = d_sim::angles(e1_points, e2_points, sigma);
+            double sim_ratios = d_sim::ratios(e1_points, e2_points, sigma);
+            double sim_desc = sim::descriptors(des_1, des_2, sigma);
+
         }
     }
 
