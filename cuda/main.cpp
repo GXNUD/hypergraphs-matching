@@ -1,11 +1,12 @@
 /**
     main.cpp
     Purpose: Find visual correspondences between two sets of
-    features from a pair of images
+    features from a pair of images using CUDA.
 
     @author Leiver Andres Campeón <leiverandres04p@hotmail.com>
     @author Yensy Helena Gomez <yensy@sirius.utp.edu.co>
     @author Juan Sebastián Vega Patiño <sebas060495@gmail.com>
+    @author John Osorio <john@sirius.utp.edu.co>
     @version 1.0 29/12/16
 */
 
@@ -18,6 +19,7 @@
 #include "match.hpp"
 #include "draw.hpp"
 #include <time.h>
+
 
 using namespace cv;
 using namespace std;
@@ -178,9 +180,6 @@ int main(int argc, const char *argv[]) {
 
   cout << endl << kpts1.size() << " Keypoints Detected in image 1 " << endl;
   cout << endl << kpts2.size() << " Keypoints Detected in image 2 " << endl;
-
-//  sort(kpts1.begin(), kpts1.end(), responseCMP);
-  //sort(kpts2.begin(), kpts2.end(), responseCMP);
 
   // Building hyperedges Matrices
   cout << endl << "Triangulating ..." << endl;
