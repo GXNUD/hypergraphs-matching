@@ -33,6 +33,7 @@ __global__ int d_hyperedges (int *edges1, int *edges2,
                 e1_points[k].y = kp1[edges1[i*WIDTH_EDGES+k]].y;
                 e2_points[k].x = kp2[edges2[i*WIDTH_EDGES+k]].x;
                 e2_points[k].y = kp2[edges2[i*WIDTH_EDGES+k]].y;
+                des_1[k] = desc1.
 
 
             }
