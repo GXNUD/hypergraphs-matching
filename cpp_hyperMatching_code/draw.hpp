@@ -45,7 +45,7 @@ namespace draw {
                         vector<KeyPoint> &kpts1, vector<KeyPoint> &kpts2) {
       Mat img_aux, img_out;
       namedWindow("Hyperedge Matching", WINDOW_NORMAL);
-      for (int i = 0; i < matches.size(); i++) {
+      for (size_t i = 0; i < matches.size(); i++) {
         hconcat(img1, img2, img_aux);
         cvtColor(img_aux, img_out, CV_GRAY2RGB);
         int base_idx = matches[i].first;

@@ -24,13 +24,11 @@ namespace match {
         crat /= _sum;
         cdesc /= _sum;
 
-        for (int i = 0; i < edges1.size(); i++) {
+        for (size_t i = 0; i < edges1.size(); i++) {
             int best_match_idx = -1;
             double max_similarity = -1E30;
-            double s_ang = -1E30;
-            double s_ratios = -1E30;
-            double s_desc = -1E30;
-            for (int j = 0; j < edges2.size(); j++) {
+
+            for (size_t j = 0; j < edges2.size(); j++) {
                 vector<Point2f> e1_points(3), e2_points(3);
                 vector<Mat> des_1(3), des_2(3);
                 for (int k = 0; k < 3; k++) {
@@ -48,9 +46,6 @@ namespace match {
                 if (similarity > max_similarity) {
                     best_match_idx = j;
                     max_similarity = similarity;
-                    s_ratios = sim_ratios;
-                    s_ang = sim_angles;
-                    s_desc = sim_desc;
                 }
             }
             if (max_similarity >= thresholding) {
@@ -75,7 +70,7 @@ namespace match {
     ) {
         vector<DMatch> matches;
         set<pair<int, int> > S;
-        for (int i = 0; i < edge_matches.size(); i++) {
+        for (size_t i = 0; i < edge_matches.size(); i++) {
             int base_edge_idx = edge_matches[i].first;
             int ref_edge_idx  = edge_matches[i].second;
             vector<Mat> des_1(3), des_2(3);

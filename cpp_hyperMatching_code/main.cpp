@@ -86,7 +86,7 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
   map<pair<double, double> , int> pt_idx;
 
   // Mapping points with their indices
-  for (int i = 0; i < points.size(); i++) {
+  for (size_t i = 0; i < points.size(); i++) {
     Point2f p = points[i];
     pt_idx[make_pair(p.x, p.y)] = i;
   }
@@ -106,7 +106,7 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
   int map_count_outliers = 0;
   vector<Point2f> pt(3);
   vector<vector<int> > edges;
-  for (int i = 0; i < triangleList.size(); i++) {
+  for (size_t i = 0; i < triangleList.size(); i++) {
     Vec6f t = triangleList[i];
     pt[0] = Point2f(t[0], t[1]);
     pt[1] = Point2f(t[2], t[3]);
@@ -142,7 +142,7 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
 ##     ## ##     ## #### ##    ##
 */
 
-void do_match(Mat &img1, Mat &img2, double cang, double crat, double cdesc) {
+void doMatch(Mat &img1, Mat &img2, double cang, double crat, double cdesc) {
   // Mat img1 = imread("./test-images/monster1s.JPG", 0);
   // Mat img2 = imread("./test-images/monster1m.JPG", 0);
 
@@ -218,20 +218,16 @@ void do_match(Mat &img1, Mat &img2, double cang, double crat, double cdesc) {
   draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
 }
 
+void cright() {
+  cout << "Sample implementation of LYSH algorithm for image matching" << endl;
+  cout << "Copyright (C) 2016 L.A. Campeon, Y.H. Gomez, J.S. Vega, J.H. Osorio." << endl;
+  cout << "This is free software; see the source code for copying conditions." << endl;
+  cout << "There is ABSOLUTELY NO WARRANTY; not even for MERCHANTABILITY or" << endl;
+  cout << "FITNESS FOR A PARTICULAR PURPOSE." << endl;
+  cout << endl;
+}
+
 void usage(char* program_name) {
-    // opts = ['--cang', '--crat', '--cdesc']
-    // description = [
-    //     'Constant of angle similarity (default: 1)',
-    //     'Constant of ratio similarity (default: 1)',
-    //     'Constant of SURF descriptor similarity (default: 1)'
-    // ]
-    //
-    // print 'Usage: {} [options ...] img1 img2'.format(sys.argv[0])
-    // print
-    // print 'Matching options:'
-    // for o, d in zip(opts, description):
-    //     print '  {}: {}'.format(o, d)
-    // sys.exit(2)
   int n = 3;
   string opts[] = {"--cang", "--crat", "--cdesc"};
   string description[] = {
@@ -250,6 +246,16 @@ void usage(char* program_name) {
   exit(EXIT_FAILURE);
 }
 
+pair<bool, double> toDouble(string s) {
+  stringstream ss(s);
+  double x;
+  ss >> x;
+  if (!ss) {
+    return make_pair(false, 0);
+  }
+  return make_pair(true, x);
+}
+
 int main(int argc, char *argv[]) {
   int opt, opt_index = 0;
   static struct option options[] = {
@@ -260,16 +266,20 @@ int main(int argc, char *argv[]) {
   };
 
   double cang = 1, crat = 1, cdesc = 1;
+  pair<bool, double> convert_type;
   while ((opt = getopt_long(argc, argv, "a:r:d:", options, &opt_index)) != -1) {
     switch (opt) {
       case 'a':
-        cang = atof(optarg);
+        convert_type = toDouble(optarg);
+        cang = convert_type.second;
         break;
       case 'r':
-        crat = atof(optarg);
+        convert_type = toDouble(optarg);
+        crat = convert_type.second;
         break;
       case 'd':
-        cdesc = atof(optarg);
+        convert_type = toDouble(optarg);
+        cdesc = convert_type.second;
         break;
       default:
         usage(argv[0]);
@@ -277,7 +287,25 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  cout << cang << " " << crat << " " << cdesc << endl;
+  if (!convert_type.first) {
+    usage(argv[0]);
+  }
+
+  if (argc - optind != 2) {
+    cout << "Error: You must provide two images" << endl << endl;
+    usage(argv[0]);
+  }
+
+  vector<Mat> img(2);
+  for (int i = optind, j = 0; i < argc; i++, j++) {
+    img[j] = imread(argv[i], CV_LOAD_IMAGE_GRAYSCALE);
+    if (!img[j].data) {
+      cout << "Error: img1 and img2 must be valid images both" << endl << endl;
+      usage(argv[0]);
+    }
+  }
+
+  doMatch(img[0], img[1], cang, crat, cdesc);
 
   return 0;
 }
