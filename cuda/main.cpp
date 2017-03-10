@@ -65,6 +65,17 @@ bool responseCMP(const KeyPoint& p1, const KeyPoint& p2) {
     return p1.response > p2.response;
 }
 
+int vectorVectorToArray(vector<vector<int>> &edges, int *array){
+    int i;
+    for(i=0; i<edges.size(); i++){
+        array[i*3+0] = edges[i][0];
+        array[i*3+1] = edges[i][1];
+        array[i*3+2] = edges[i][2];
+
+    }
+    return 0;
+}
+
 /*
 ######## ########   ######   ########  ######
 ##       ##     ## ##    ##  ##       ##    ##
@@ -186,6 +197,10 @@ int main(int argc, const char *argv[]) {
   vector<vector<int> > Edges1 = delaunayTriangulation(img1, kpts1);
   vector<vector<int> > Edges2 = delaunayTriangulation(img2, kpts2);
 
+  // Conversion to c array
+  int *edges1Array = (int*)malloc(3*Edges1.size()*sizeof(int));
+  vectorVectorToArray(Edges1, edges1Array);
+
   cout << endl << "Triangulation Done." << endl;
   cout << Edges1.size() << " Edges from image 1" << endl;
   cout << Edges2.size() << " Edges from image 2" << endl;
@@ -209,5 +224,7 @@ int main(int argc, const char *argv[]) {
 
   // Draw Point matching
   draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
+
+  free(edges1Array);
   return 0;
 }
