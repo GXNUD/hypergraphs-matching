@@ -30,7 +30,7 @@ def get_features(img, limit=None, outname='sample.jpg', show=False):
 
 
 def do_match(img1, img2, cang, crat, cdesc):
-    M = 10
+    M = None
 
     # Get features and distances between every pair of points from both images
     (kpts1, des1) = get_features(img1, M, 'target.jpg')
@@ -39,13 +39,18 @@ def do_match(img1, img2, cang, crat, cdesc):
     Hgt = Hypergraph(kpts1, des1)
     Hgr = Hypergraph(kpts2, des2)
 
+    # draw.triangulation(kpts1, Hgt.E, img1, 'Triangulation 1')
+    # draw.triangulation(kpts2, Hgr.E, img2, 'Triangulation 2')
+
     print 'Hypergraph construction done'
     edge_matches, point_matches = match(
-        Hgt.E, Hgr.E, kpts1, kpts2, des1, des2, cang, crat, cdesc, 0.4, 0.1
+        Hgt.E, Hgr.E, kpts1, kpts2, des1, des2,
+        cang, crat, cdesc,
+        0.7, 0.75, True
     )
     print 'Hyperedges matching done'
 
-    draw.edges_match(edge_matches, kpts1, kpts2, Hgt.E, Hgr.E, img1, img2)
+    # draw.edges_match(edge_matches, kpts1, kpts2, Hgt.E, Hgr.E, img1, img2)
 
     point_matches = sorted(point_matches, key=lambda x: x.distance)
     draw.points_match(point_matches, kpts1, kpts2, img1, img2)
