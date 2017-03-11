@@ -24,13 +24,6 @@ using namespace cv;
 using namespace std;
 using namespace cv::gpu;
 
-typedef struct KeyPoint_struct{
-    float *pt_x;
-    float *pt_y;
-    int size;
-
-} KeyPointStruct;
-
 
 
 /*
@@ -83,15 +76,12 @@ int vectorVectorToArray(vector<vector<int>> &edges, int *array){
     return 0;
 }
 
-int KeyPointsToStruct(vector<KeyPoint> kpts, KeyPointStruct *kpts_struct){
-    int sizeKeyPoints = kpts.size();
-    int i;
-    for (int i = 0; i < sizeKeyPoints; i++) {
-        kpts_struct->pt_x[i] = kpts[i].pt.x;
-        kpts_struct->pt_y[i] = kpts[i].pt.y;
+int keyPointsToArray(vector<KeyPoint> kpts, float *array){
+    for (int i = 0; i < kpts.size(); i++) {
+        array[i*2+0] = kpts[][]
     }
-    return 0;
 }
+
 
 /*
 ######## ########   ######   ########  ######
@@ -131,7 +121,7 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
   vector<Vec6f> triangleList;
   subdiv.getTriangleList(triangleList);
 
-  draw::triangulation(img, triangleList);
+  //draw::triangulation(img, triangleList);
 
   // Converting to edges from coordinates to indices
   int rect_count_outliers = 0;
@@ -221,14 +211,14 @@ int main(int argc, const char *argv[]) {
   cout << Edges1[0][0] << " " << Edges1[0][1] << "Reales" << endl;
 
 
-  // Conversion to c Struct
-  KeyPoint_struct *kpts_struct1, *kpts_struct2;
-  kpts_struct1 = (KeyPoint_struct *)malloc(sizeof(KeyPoint_struct));
-  kpts_struct2 = (KeyPoint_struct *)malloc(sizeof(KeyPoint_struct));
-  kpts_struct1->pt_x = (float*)malloc(kpts1.size()*sizeof(float));
-  kpts_struct2->pt_y = (float*)malloc(kpts2.size()*sizeof(float));
-  KeyPointsToStruct(kpts1, kpts_struct1);
-  KeyPointsToStruct(kpts2, kpts_struct2);
+  // Conversion of KeyPoint to array
+  float *keyPoints1Array, *keyPoints2Array;
+  keyPoints1Array = (float*)malloc(kpts1.size()*sizeof(float)*2);
+  keyPoints2Array = (float*)malloc(kpts2.size()*sizeof(float)*2);
+  keyPointsToArray(kpts1, keyPoints1Array);
+
+  //KeyPointsToStruct(kpts1, kpts_struct1);
+  //KeyPointsToStruct(kpts2, kpts_struct2);
 
   cout << endl << "Triangulation Done." << endl;
   cout << Edges1.size() << " Edges from image 1" << endl;
@@ -252,8 +242,8 @@ int main(int argc, const char *argv[]) {
   cout << matches.size() << " Point matches passed!" << endl;
 
   // Draw Point matching
-  draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
+  //draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
 
-  free(edges1Array); free(kpts_struct1->pt_x); free(kpts_struct2->pt_y); free(kpts_struct2); free(kpts_struct1);
+  free(edges1Array); free(kpts_struct1->pt_x); free(kpts_struct2->pt_y); free(kpts_struct1); free(kpts_struct2);
   return 0;
 }
