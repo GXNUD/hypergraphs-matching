@@ -3,7 +3,7 @@ from __future__ import division
 import numpy as np
 import cv2
 from hypergraph import Hypergraph
-import match
+from match import match
 import draw
 import sys
 import getopt
@@ -30,7 +30,7 @@ def get_features(img, limit=None, outname='sample.jpg', show=False):
 
 
 def do_match(img1, img2, cang, crat, cdesc):
-    M = 20
+    M = 10
 
     # Get features and distances between every pair of points from both images
     (kpts1, des1) = get_features(img1, M, 'target.jpg')
@@ -40,26 +40,15 @@ def do_match(img1, img2, cang, crat, cdesc):
     Hgr = Hypergraph(kpts2, des2)
 
     print 'Hypergraph construction done'
-
-    # Matching
-    edge_matches = match.hyperedges(
-        Hgt.E, Hgr.E, kpts1, kpts2, des1, des2, cang, crat, cdesc, 0.4
+    edge_matches, point_matches = match(
+        Hgt.E, Hgr.E, kpts1, kpts2, des1, des2, cang, crat, cdesc, 0.4, 0.1
     )
-
     print 'Hyperedges matching done'
 
-    point_matches = match.points(edge_matches, des1, des2, Hgt.E, Hgr.E, 0.1)
+    draw.edges_match(edge_matches, kpts1, kpts2, Hgt.E, Hgr.E, img1, img2)
+
     point_matches = sorted(point_matches, key=lambda x: x.distance)
-
     draw.points_match(point_matches, kpts1, kpts2, img1, img2)
-
-    bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-    matches = bf.match(des1, des2)
-    matches = sorted(matches, key=lambda x: x.distance)
-
-    draw.points_match(
-        matches[:len(point_matches)], kpts1, kpts2, img1, img2, 'cv2'
-    )
 
     cv2.waitKey()
     cv2.destroyAllWindows()

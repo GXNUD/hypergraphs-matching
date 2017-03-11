@@ -2,85 +2,75 @@ from __future__ import division
 from math import exp, sin
 from numpy import linalg as LA
 import numpy as np
-import itertools
+SIGMA = 0.5
 
 
-def vectors_angle_sin(pivot, p, q):
-    V1 = np.subtract(p, pivot)
-    V2 = np.subtract(q, pivot)
-    dot = np.dot(V1, V2)
-    angle = np.arccos(dot / (LA.norm(V1) * LA.norm(V2)))
-    return sin(angle)
+def angle(p, i):
+    a = np.subtract(p[i], p[(i + 1) % 3])
+    b = np.subtract(p[i], p[(i + 2) % 3])
+    return np.dot(a, b) / LA.norm(a) / LA.norm(b)
 
 
-def get_angles_sin(p):
-    p1, p2, p3 = p
-    alpha = vectors_angle_sin(p1, p2, p3)
-    beta = vectors_angle_sin(p2, p1, p3)
-    theta = vectors_angle_sin(p3, p1, p2)
-
-    return [alpha, beta, theta]
-
-
-# def angles(e1, e2, kpts1, kpts2, sigma=0.5):
-def angles(p, q, sigma=0.5):
-    '''
-    angles1 and angles2 are those formed by the first and second triangle,
-    respecvitly, we'll choose the best case scenario for the sum of sin
-    '''
-
-    # sin1 = get_angles_sin(e1, kpts1)
-    # sin2 = get_angles_sin(e2, kpts2)
-
-    sin1 = get_angles_sin(p)
-    sin2 = get_angles_sin(q)
-
-    perms = itertools.permutations(sin1)
-    diffs = [sum(np.abs(np.subtract(s, sin2))) for s in perms]
-    min_diff_between_sin = min(diffs)
-    similarity = exp(-min_diff_between_sin / sigma)
-
-    return similarity
+def sim_angles(p, q, idx1, idx2, idx3):
+    i1, j1 = idx1
+    i2, j2 = idx2
+    i3, j3 = idx3
+    return exp(-(
+        abs(sin(angle(p, i1)) - sin(angle(p, j1))) +
+        abs(sin(angle(p, i2)) - sin(angle(p, j2))) +
+        abs(sin(angle(p, i3)) - sin(angle(p, j3)))
+    ) / SIGMA)
 
 
-def ratios(p, q, sigma=0.5):
-    dp = [
-        LA.norm(np.subtract(p[i], p[j]))
-        for i, j in itertools.combinations(xrange(3), 2)
+def oposite_side(p, i):
+    return LA.norm(np.subtract(p[(i + 1) % 3], p[(i + 2) % 3]))
+
+
+def sim_ratios(p, q, idx1, idx2, idx3):
+    i1, j1 = idx1
+    i2, j2 = idx2
+    i3, j3 = idx3
+    R1 = oposite_side(p, i1) / oposite_side(q, j1)
+    R2 = oposite_side(p, i2) / oposite_side(q, j2)
+    R3 = oposite_side(p, i3) / oposite_side(q, j3)
+    return exp(-np.std([R1, R2, R3]) / SIGMA)
+
+
+def sim_desc(dp, dq, idx1, idx2, idx3):
+    i1, j1 = idx1
+    i2, j2 = idx2
+    i3, j3 = idx3
+    return exp(-(
+        LA.norm(np.subtract(dp[i1], dq[j1])) +
+        LA.norm(np.subtract(dp[i2], dq[j2])) +
+        LA.norm(np.subtract(dp[i3], dq[j3]))
+    ) / SIGMA)
+
+
+def similarity(p, q, dp, dq, cang, crat, cdesc):
+    perms = [
+        [(0, 0), (1, 1), (2, 2)],
+        [(0, 0), (1, 2), (2, 1)],
+        [(0, 1), (1, 0), (2, 2)],
+        [(0, 1), (1, 2), (2, 0)],
+        [(0, 2), (1, 0), (2, 1)],
+        [(0, 2), (1, 1), (2, 0)]
     ]
-    dq = [
-        LA.norm(np.subtract(q[i], q[j]))
-        for i, j in itertools.combinations(xrange(3), 2)
-    ]
+    s = cang + crat + cdesc
+    cang /= s
+    crat /= s
+    cdesc /= s
 
-    perms = itertools.permutations(dq)
-
-    err = float('inf')
-    for sides_q in perms:
-        sides_p = dp
-        r = [a / A for a, A in zip(sides_p, sides_q)]
-        diffs = [
-            np.abs(r[i] - r[j])
-            for i, j in itertools.combinations(xrange(3), 2)
-        ]
-        _err = sum(diffs)
-        err = min(err, _err)
-
-    similarity = exp(-err / sigma)
-    return similarity
-
-
-def descriptors(p, q, sigma=0.5):
-    perms = itertools.permutations(q)
-
-    diffs = [
-        # sum([LA.norm(np.subtract(qqi, pi)) for qqi, pi in zip(qq, p)])
-        # for qq in perms
-        sum([LA.norm(np.subtract(qqi, pi)) for qqi, pi in zip(qq, p)])
-        for qq in perms
-    ]
-
-    min_diff = min(diffs)
-    similarity = exp(- min_diff / sigma)
-
-    return similarity
+    max_sim = -float('inf')
+    for idx in perms:
+        _sim_a = sim_angles(p, q, *idx)
+        _sim_r = sim_ratios(p, q, *idx)
+        _sim_d = sim_desc(dp, dq, *idx)
+        sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d
+        if sim > max_sim:
+            max_sim = sim
+            point_match = idx
+            sim_a = _sim_a
+            sim_r = _sim_r
+            sim_d = _sim_d
+    return point_match, max_sim, sim_a, sim_r, sim_d

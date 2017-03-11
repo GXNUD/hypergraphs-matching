@@ -1,7 +1,7 @@
 from __future__ import division
 import math
 import matplotlib.pyplot as plt
-import similarity as sim
+from similarity import similarity
 
 
 def rot(p, t):
@@ -18,17 +18,22 @@ def trans(p, tx, ty):
 
 if __name__ == '__main__':
     p = [(0, 0), (1, 1), (-1, 1)]
-    # q = [trans(rot(pp, 10 * math.pi / 180), 2, 3) for pp in p]
-    q = [(1, 0), (1, -1), (3, 2)]
+    dp = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    q = [trans(rot(pp, 10 * math.pi / 180), 2, 3) for pp in p]
+    # q = [(1, 0), (1, -1), (3, 2)]
+    dq = [[4, 8, 3], [7, 5, 0], [1, 4, 6]]
 
     print p
     print q
-    print sim.angles(p, q)
-    print sim.ratios(p, q)
-    print sim.descriptors(
-            [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-            [[4, 8, 3], [7, 5, 0], [1, 4, 6]]
-        )
+    point_match, max_sim, sim_a, sim_r, sim_d = similarity(
+        p, q,
+        dp, dq,
+        1, 1, 2
+    )
+    print 'max sim:     {}'.format(max_sim)
+    print 'sim angles:  {}'.format(sim_a)
+    print 'sim ratios:  {}'.format(sim_r)
+    print 'sim desc:    {}'.format(sim_d)
 
     xp, yp = zip(*p)
     xq, yq = zip(*q)

@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from math import log
 import random
 
 
@@ -39,9 +38,9 @@ def edges_match(matches, kp1, kp2, E1, E2, img1, img2):
         print (x3_2, y3_2)
         print
         print "similarity        -> {}".format(mat[2])
-        print "similarity ratios  : {}".format(mat[3])
-        print "similarity angles  : {}".format(mat[4])
-        print "similarity desc    : {} {}".format(mat[5], - 0.5 * log(mat[5]))
+        print "similarity angles  : {}".format(mat[3])
+        print "similarity ratios  : {}".format(mat[4])
+        print "similarity desc    : {}".format(mat[5])
 
         cv2.imshow("Matching", out)
         cv2.waitKey()
