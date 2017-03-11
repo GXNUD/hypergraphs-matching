@@ -78,8 +78,10 @@ int vectorVectorToArray(vector<vector<int>> &edges, int *array){
 
 int keyPointsToArray(vector<KeyPoint> kpts, float *array){
     for (int i = 0; i < kpts.size(); i++) {
-        array[i*2+0] = kpts[][]
+        array[i*2+0] = kpts[i].pt.x;
+        array[i*2+1] = kpts[i].pt.y;
     }
+    return 0;
 }
 
 
@@ -206,21 +208,22 @@ int main(int argc, const char *argv[]) {
 
   // Conversion to c array
   int *edges1Array = (int*)malloc(3*Edges1.size()*sizeof(int));
+  int *edges2Array = (int*)malloc(3*Edges2.size()*sizeof(int));
   vectorVectorToArray(Edges1, edges1Array);
   cout << edges1Array[0*3+0] << " " << edges1Array[0*3+1] << "Test Edges" << endl;
   cout << Edges1[0][0] << " " << Edges1[0][1] << "Reales" << endl;
 
 
   // Conversion of KeyPoint to array
+  // La columna cero del arreglo hace referencia a X y la 1 a Y
   float *keyPoints1Array, *keyPoints2Array;
   keyPoints1Array = (float*)malloc(kpts1.size()*sizeof(float)*2);
   keyPoints2Array = (float*)malloc(kpts2.size()*sizeof(float)*2);
   keyPointsToArray(kpts1, keyPoints1Array);
+  keyPointsToArray(kpts2, keyPoints2Array);
+  cout << keyPoints1Array[0*2+0] << " " << keyPoints1Array[0*2+1] << "Test Keypoints" << endl;
+  cout << kpts1[0].pt.x << " " << kpts1[0].pt.y << "KeyPoints Reales" << endl;
 
-  //KeyPointsToStruct(kpts1, kpts_struct1);
-  //KeyPointsToStruct(kpts2, kpts_struct2);
-
-  cout << endl << "Triangulation Done." << endl;
   cout << Edges1.size() << " Edges from image 1" << endl;
   cout << Edges2.size() << " Edges from image 2" << endl;
   cout << endl << "Matching ..." << endl;
@@ -244,6 +247,6 @@ int main(int argc, const char *argv[]) {
   // Draw Point matching
   //draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
 
-  free(edges1Array); free(kpts_struct1->pt_x); free(kpts_struct2->pt_y); free(kpts_struct1); free(kpts_struct2);
+  free(edges1Array); free(keyPoints1Array); free(keyPoints2Array);
   return 0;
 }
