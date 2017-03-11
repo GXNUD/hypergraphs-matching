@@ -20,10 +20,17 @@
 #include "draw.hpp"
 #include <time.h>
 
-
 using namespace cv;
 using namespace std;
 using namespace cv::gpu;
+
+typedef struct KeyPoint_struct{
+    float *pt_x;
+    float *pt_y;
+    int size;
+
+} KeyPointStruct;
+
 
 
 /*
@@ -72,6 +79,16 @@ int vectorVectorToArray(vector<vector<int>> &edges, int *array){
         array[i*3+1] = edges[i][1];
         array[i*3+2] = edges[i][2];
 
+    }
+    return 0;
+}
+
+int KeyPointsToStruct(vector<KeyPoint> kpts, KeyPointStruct *kpts_struct){
+    int sizeKeyPoints = kpts.size();
+    int i;
+    for (int i = 0; i < sizeKeyPoints; i++) {
+        kpts_struct->pt_x[i] = kpts[i].pt.x;
+        kpts_struct->pt_y[i] = kpts[i].pt.y;
     }
     return 0;
 }
@@ -200,6 +217,18 @@ int main(int argc, const char *argv[]) {
   // Conversion to c array
   int *edges1Array = (int*)malloc(3*Edges1.size()*sizeof(int));
   vectorVectorToArray(Edges1, edges1Array);
+  cout << edges1Array[0*3+0] << " " << edges1Array[0*3+1] << "Test Edges" << endl;
+  cout << Edges1[0][0] << " " << Edges1[0][1] << "Reales" << endl;
+
+
+  // Conversion to c Struct
+  KeyPoint_struct *kpts_struct1, *kpts_struct2;
+  kpts_struct1 = (KeyPoint_struct *)malloc(sizeof(KeyPoint_struct));
+  kpts_struct2 = (KeyPoint_struct *)malloc(sizeof(KeyPoint_struct));
+  kpts_struct1->pt_x = (float*)malloc(kpts1.size()*sizeof(float));
+  kpts_struct2->pt_y = (float*)malloc(kpts2.size()*sizeof(float));
+  KeyPointsToStruct(kpts1, kpts_struct1);
+  KeyPointsToStruct(kpts2, kpts_struct2);
 
   cout << endl << "Triangulation Done." << endl;
   cout << Edges1.size() << " Edges from image 1" << endl;
@@ -225,6 +254,6 @@ int main(int argc, const char *argv[]) {
   // Draw Point matching
   draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
 
-  free(edges1Array);
+  free(edges1Array); free(kpts_struct1->pt_x); free(kpts_struct2->pt_y); free(kpts_struct2); free(kpts_struct1);
   return 0;
 }
