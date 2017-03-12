@@ -17,8 +17,20 @@
 #include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/nonfree/gpu.hpp>
 #include "match.hpp"
+#include "d_match.hpp"
 #include "draw.hpp"
 #include <time.h>
+
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess)
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
 
 using namespace cv;
 using namespace std;
@@ -87,7 +99,6 @@ int keyPointsToArray(vector<KeyPoint> kpts, float *array){
 int descriptorToArray(Mat &descriptor, float *array){
     int rows = descriptor.rows;
     int cols = descriptor.cols;
-    cout << "Filas: " << rows << "Columnas: " << cols << endl;
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             array[i*cols+j] = descriptor.at<float>(i,j);
@@ -221,8 +232,14 @@ int main(int argc, const char *argv[]) {
   int *edges1Array = (int*)malloc(3*Edges1.size()*sizeof(int));
   int *edges2Array = (int*)malloc(3*Edges2.size()*sizeof(int));
   vectorVectorToArray(Edges1, edges1Array);
-  cout << edges1Array[0*3+0] << " " << edges1Array[0*3+1] << "Test Edges" << endl;
-  cout << Edges1[0][0] << " " << Edges1[0][1] << "Reales" << endl;
+  vectorVectorToArray(Edges2, edges2Array);
+  int *d_edges1Array, *d_edges2Array;
+  gpuErrchk(cudaMalloc((void**)&d_edges1Array, Edges1.size()*sizeof(int)));
+  gpuErrchk(cudaMalloc((void**)&d_edges2Array, Edges2.size()*sizeof(int)));
+  gpuErrchk(cudaMemcpy(d_edges1Array, edges1Array, Edges1.size()*sizeof(int), cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(d_edges2Array, edges2Array, Edges2.size()*sizeof(int), cudaMemcpyHostToDevice));
+
+
 
 
   // Conversion of KeyPoint to array
@@ -232,14 +249,38 @@ int main(int argc, const char *argv[]) {
   keyPoints2Array = (float*)malloc(kpts2.size()*sizeof(float)*2);
   keyPointsToArray(kpts1, keyPoints1Array);
   keyPointsToArray(kpts2, keyPoints2Array);
-  cout << keyPoints1Array[0*2+0] << " " << keyPoints1Array[0*2+1] << "Test Keypoints" << endl;
-  cout << kpts1[0].pt.x << " " << kpts1[0].pt.y << "KeyPoints Reales" << endl;
+  float *d_keyPoints1Array, *d_keyPoints2Array;
+  gpuErrchk(cudaMalloc((void**)&d_keyPoints1Array, kpts1.size()*sizeof(float)*2));
+  gpuErrchk(cudaMalloc((void**)&d_keyPoints2Array, kpts2.size()*sizeof(float)*2));
+  gpuErrchk(cudaMemcpy(d_keyPoints1Array, keyPoints1Array, kpts1.size()*sizeof(float)*2, cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(d_keyPoints2Array, keyPoints2Array, kpts2.size()*sizeof(float)*2, cudaMemcpyHostToDevice));
+
 
   // Conversion of descriptors to array
   float *descriptor1Array, *descriptor2Array;
   descriptor1Array = (float*)malloc(descriptor1.rows*descriptor1.cols*sizeof(float));
   descriptor2Array = (float*)malloc(descriptor2.rows*descriptor2.cols*sizeof(float));
   descriptorToArray(descriptor1, descriptor1Array);
+  descriptorToArray(descriptor2, descriptor2Array);
+  float *d_descriptor1Array, *d_descriptor2Array;
+  gpuErrchk(cudaMalloc((void**)&d_descriptor1Array, descriptor1.rows*descriptor1.cols*sizeof(float)));
+  gpuErrchk(cudaMalloc((void**)&d_descriptor2Array, descriptor2.rows*descriptor2.cols*sizeof(float)));
+  gpuErrchk(cudaMemcpy(d_descriptor1Array, descriptor1Array, descriptor1.rows*descriptor1.cols*sizeof(float), cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(d_descriptor2Array, descriptor2Array, descriptor2.rows*descriptor2.cols*sizeof(float), cudaMemcpyHostToDevice));
+
+  int *gpu_matches, *d_matches;
+  gpu_matches = (int*)malloc(100*sizeof(int)*2);
+  gpuErrchk(cudaMalloc((void**)&d_matches,100*sizeof(int)*2));
+
+  float sizeX = (float)Edges1.size();
+  float sizeY = (float)Edges2.size();
+  dim3 dimGrid(ceil(sizeX/32.0),ceil(sizeY/32.0),1);
+  dim3 dimBlock(32,32,1);
+  d_hyperedges<<<dimGrid,dimBlock>>> (d_edges1Array, d_edges2Array, d_keyPoints1Array, d_keyPoints2Array,
+        d_descriptor1Array, d_descriptor2Array, 10, 10, 3, 0.75,
+        Edges1.size(), Edges2.size(), d_matches);
+  gpuErrchk(cudaPeekAtLastError());
+  gpuErrchk(cudaDeviceSynchronize());
 
   cout << Edges1.size() << " Edges from image 1" << endl;
   cout << Edges2.size() << " Edges from image 2" << endl;
@@ -266,5 +307,8 @@ int main(int argc, const char *argv[]) {
 
   free(edges1Array); free(keyPoints1Array); free(keyPoints2Array);
   free(descriptor1Array); free(descriptor2Array);
+  cudaFree(d_edges1Array); cudaFree(d_edges2Array);
+  cudaFree(d_keyPoints1Array); cudaFree(d_keyPoints2Array);
+  cudaFree(d_descriptor1Array); cudaFree(d_descriptor2Array);
   return 0;
 }
