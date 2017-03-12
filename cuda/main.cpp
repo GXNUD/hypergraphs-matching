@@ -84,10 +84,16 @@ int keyPointsToArray(vector<KeyPoint> kpts, float *array){
     return 0;
 }
 
-int descriptorToArray(Mat &descriptor, double *array){
+int descriptorToArray(Mat &descriptor, float *array){
     int rows = descriptor.rows;
     int cols = descriptor.cols;
     cout << "Filas: " << rows << "Columnas: " << cols << endl;
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            array[i*cols+j] = descriptor.at<float>(i,j);
+        }
+    }
+    return 0;
 }
 
 /*
@@ -229,7 +235,11 @@ int main(int argc, const char *argv[]) {
   cout << keyPoints1Array[0*2+0] << " " << keyPoints1Array[0*2+1] << "Test Keypoints" << endl;
   cout << kpts1[0].pt.x << " " << kpts1[0].pt.y << "KeyPoints Reales" << endl;
 
-  cout << "Descriptor: " << descriptor1.row(0) << endl;
+  // Conversion of descriptors to array
+  float *descriptor1Array, *descriptor2Array;
+  descriptor1Array = (float*)malloc(descriptor1.rows*descriptor1.cols*sizeof(float));
+  descriptor2Array = (float*)malloc(descriptor2.rows*descriptor2.cols*sizeof(float));
+  descriptorToArray(descriptor1, descriptor1Array);
 
   cout << Edges1.size() << " Edges from image 1" << endl;
   cout << Edges2.size() << " Edges from image 2" << endl;
@@ -255,5 +265,6 @@ int main(int argc, const char *argv[]) {
   //draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
 
   free(edges1Array); free(keyPoints1Array); free(keyPoints2Array);
+  free(descriptor1Array); free(descriptor2Array);
   return 0;
 }
