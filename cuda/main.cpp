@@ -84,6 +84,11 @@ int keyPointsToArray(vector<KeyPoint> kpts, float *array){
     return 0;
 }
 
+int descriptorToArray(Mat &descriptor, double *array){
+    int rows = descriptor.rows;
+    int cols = descriptor.cols;
+    cout << "Filas: " << rows << "Columnas: " << cols << endl;
+}
 
 /*
 ######## ########   ######   ########  ######
@@ -223,6 +228,8 @@ int main(int argc, const char *argv[]) {
   keyPointsToArray(kpts2, keyPoints2Array);
   cout << keyPoints1Array[0*2+0] << " " << keyPoints1Array[0*2+1] << "Test Keypoints" << endl;
   cout << kpts1[0].pt.x << " " << kpts1[0].pt.y << "KeyPoints Reales" << endl;
+
+  cout << "Descriptor: " << descriptor1.row(0) << endl;
 
   cout << Edges1.size() << " Edges from image 1" << endl;
   cout << Edges2.size() << " Edges from image 2" << endl;
