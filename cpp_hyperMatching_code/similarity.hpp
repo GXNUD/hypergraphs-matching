@@ -51,7 +51,7 @@ namespace sim {
         vector<vector<int> > idx_perm = getCombination(3, 2);
         vector<double> sides_p;
         vector<double> sides_q;
-        for (int k = 0; k < idx_perm.size(); k++) {
+        for (size_t k = 0; k < idx_perm.size(); k++) {
             int i = idx_perm[k][0];
             int j = idx_perm[k][1];
             double side_p = norm(p[i] - p[j]);
@@ -69,7 +69,7 @@ namespace sim {
                 r[i] = sides_p[i] / sides_q[i];
             }
 
-            for (int k = 0; k < idx_perm.size(); k++) {
+            for (size_t k = 0; k < idx_perm.size(); k++) {
                 sum += fabs(r[idx_perm[k][0]] - r[idx_perm[k][1]]);
             }
             min_err = min(sum, min_err);

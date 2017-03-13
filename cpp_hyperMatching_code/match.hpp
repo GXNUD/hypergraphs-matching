@@ -15,22 +15,20 @@ namespace match {
                                         vector<KeyPoint> &kp1,
                                         vector<KeyPoint> &kp2,
                                         Mat &desc1, Mat &desc2,
-                                        double c1, double c2, double c3,
+                                        double cang, double crat, double cdesc,
                                         double thresholding) {
         double sigma = 0.5;
         vector< pair<int, int> > matches;
-        double _sum = c1 + c2 + c3;
-        c1 /= _sum;
-        c2 /= _sum;
-        c3 /= _sum;
+        double _sum = cang + crat + cdesc;
+        cang /= _sum;
+        crat /= _sum;
+        cdesc /= _sum;
 
-        for (int i = 0; i < edges1.size(); i++) {
+        for (size_t i = 0; i < edges1.size(); i++) {
             int best_match_idx = -1;
             double max_similarity = -1E30;
-            double s_ang = -1E30;
-            double s_ratios = -1E30;
-            double s_desc = -1E30;
-            for (int j = 0; j < edges2.size(); j++) {
+
+            for (size_t j = 0; j < edges2.size(); j++) {
                 vector<Point2f> e1_points(3), e2_points(3);
                 vector<Mat> des_1(3), des_2(3);
                 for (int k = 0; k < 3; k++) {
@@ -42,15 +40,12 @@ namespace match {
                 double sim_angles = sim::angles(e1_points, e2_points, sigma);
                 double sim_ratios = sim::ratios(e1_points, e2_points, sigma);
                 double sim_desc = sim::descriptors(des_1, des_2, sigma);
-                double similarity = c1 * sim_ratios + c2 * sim_angles +
-                                    c3 * sim_desc;
+                double similarity = cang * sim_angles + crat * sim_ratios +
+                                    cdesc * sim_desc;
 
                 if (similarity > max_similarity) {
                     best_match_idx = j;
                     max_similarity = similarity;
-                    s_ratios = sim_ratios;
-                    s_ang = sim_angles;
-                    s_desc = sim_desc;
                 }
             }
             if (max_similarity >= thresholding) {
@@ -75,7 +70,7 @@ namespace match {
     ) {
         vector<DMatch> matches;
         set<pair<int, int> > S;
-        for (int i = 0; i < edge_matches.size(); i++) {
+        for (size_t i = 0; i < edge_matches.size(); i++) {
             int base_edge_idx = edge_matches[i].first;
             int ref_edge_idx  = edge_matches[i].second;
             vector<Mat> des_1(3), des_2(3);
