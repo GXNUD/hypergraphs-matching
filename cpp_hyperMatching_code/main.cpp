@@ -266,7 +266,7 @@ int main(int argc, char *argv[]) {
   };
 
   double cang = 1, crat = 1, cdesc = 1;
-  pair<bool, double> convert_type;
+  pair<bool, double> convert_type(true, 0);
   while ((opt = getopt_long(argc, argv, "a:r:d:", options, &opt_index)) != -1) {
     switch (opt) {
       case 'a':
