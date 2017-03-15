@@ -41,7 +41,7 @@ namespace sim {
         vector<double> sines1 = getAnglesSin(p);
         vector<double> sines2 = getAnglesSin(q);
 
-        sort(sines1.begin(), sines1.end());
+        //sort(sines1.begin(), sines1.end());
         double min_diff_between_sin = 1E30;
         do {
             double sum = 0;

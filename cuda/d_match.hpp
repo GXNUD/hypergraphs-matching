@@ -64,19 +64,27 @@ __device__ float d_sim_angles(float *p, float *q){
     float min_diff_between_sin = 1E30;
 
     float sum = 0.0;
-    sum = sum + (fabs(sines1[0] - sines2[0])) + (fabs(sines1[1] - sines2[1])) +
+    sum = (fabs(sines1[0] - sines2[0])) + (fabs(sines1[1] - sines2[1])) +
         (fabs(sines1[2]-sines2[2]));
     min_diff_between_sin = min(min_diff_between_sin,sum);
 
-    sum = sum + (fabs(sines1[0] - sines2[0])) + (fabs(sines1[2] - sines2[1])) +
+    sum = (fabs(sines1[0] - sines2[0])) + (fabs(sines1[2] - sines2[1])) +
         (fabs(sines1[1]-sines2[2]));
     min_diff_between_sin = min(min_diff_between_sin,sum);
 
-    sum = sum + (fabs(sines1[1] - sines2[0])) + (fabs(sines1[0] - sines2[1])) +
+    sum = (fabs(sines1[1] - sines2[0])) + (fabs(sines1[0] - sines2[1])) +
         (fabs(sines1[2]-sines2[2]));
     min_diff_between_sin = min(min_diff_between_sin,sum);
 
-    sum = sum + (fabs(sines1[1] - sines2[0])) + (fabs(sines1[2] - sines2[1])) +
+    sum = (fabs(sines1[1] - sines2[0])) + (fabs(sines1[2] - sines2[1])) +
+        (fabs(sines1[0]-sines2[2]));
+    min_diff_between_sin = min(min_diff_between_sin,sum);
+
+    sum = (fabs(sines1[2] - sines2[0])) + (fabs(sines1[0] - sines2[1])) +
+        (fabs(sines1[1]-sines2[2]));
+    min_diff_between_sin = min(min_diff_between_sin,sum);
+
+    sum = (fabs(sines1[2] - sines2[0])) + (fabs(sines1[1] - sines2[1])) +
         (fabs(sines1[0]-sines2[2]));
     min_diff_between_sin = min(min_diff_between_sin,sum);
 
