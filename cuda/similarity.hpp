@@ -7,10 +7,16 @@
 using namespace cv;
 using namespace std;
 
+//int testing = 0;
+
 double vectorsAngleSin(Point2f &pivot, Point2f &p, Point2f &q) {
     Point2f v1 = p - pivot;
     Point2f v2 = q - pivot;
     double dot = v1.dot(v2);
+    //if (testing == 0 )
+      //  cout << " Sin real" << dot << endl;
+    //testing++;
+
     double angle = acos(dot / norm(v1) / norm(v2));
     return sin(angle);
 }

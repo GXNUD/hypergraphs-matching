@@ -39,15 +39,15 @@ namespace match {
                     des_1[k] = desc1.row(edges1[i][k]);
                     des_2[k] = desc2.row(edges2[j][k]);
                 }
-                if(i==5 && j==7)
-                    cout << e1_points[0]<<e1_points[1]<<endl;
-
 
                 double sim_angles = sim::angles(e1_points, e2_points, sigma);
                 double sim_ratios = sim::ratios(e1_points, e2_points, sigma);
                 double sim_desc = sim::descriptors(des_1, des_2, sigma);
                 double similarity = c1 * sim_ratios + c2 * sim_angles +
                                     c3 * sim_desc;
+
+                if(i==0 && j==0)
+                    cout <<"e1_points real: " << sim_angles << endl;
 
                 if (similarity > max_similarity) {
                     best_match_idx = j;
