@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SIZE 3
-#define SIZE_POINTS 6
+//#define SIZE 3
+//#define SIZE_POINTS 6
 /*#define D_DOT_1 (p[2]-p[0])*(p[4]-p[0])+(p[2]-p[1])*(p[5]-p[1])
 #define NORMV1_1 sqrt((p[2]-p[0])*(p[2]-p[0])+(p[2]-p[1])*(p[2]-p[1]))
 #define NORMV2_1 sqrt((p[4]-p[0])*(p[4]-p[0])+(p[5]-p[1])*(p[5]-p[1]))
@@ -104,79 +104,28 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
     int i = blockIdx.y*blockDim.y + threadIdx.y;
     int j = blockIdx.x*blockDim.x + threadIdx.x;
     float *e1_points,*e2_points;
-    e1_points = (float*) malloc(SIZE_POINTS*sizeof(float));
-    e2_points = (float*) malloc(SIZE_POINTS*sizeof(float));
+    e1_points = (float*) malloc(6*sizeof(float));
+    e2_points = (float*) malloc(6*sizeof(float));
 
     if ((i < edges1Size) && (j < edges2Size)){
      //   float p[SIZE_POINTS], q[SIZE_POINTS];
-        e1_points[0*2+0] = kp1[edges1[i*SIZE+0]*2+0];
-        e1_points[0*2+1] = kp1[edges1[i*SIZE+0]*2+1];
-        e1_points[1*2+0] = kp1[edges1[i*SIZE+1]*2+0];
-        e1_points[1*2+1] = kp1[edges1[i*SIZE+1]*2+1];
-        e1_points[2*2+0] = kp1[edges1[i*SIZE+2]*2+0];
-        e1_points[2*2+1] = kp1[edges1[i*SIZE+2]*2+1];
-        e2_points[0*2+0] = kp2[edges2[j*SIZE+0]*2+0];
-        e2_points[0*2+1] = kp2[edges2[j*SIZE+0]*2+1];
-        e2_points[1*2+0] = kp2[edges2[j*SIZE+1]*2+0];
-        e2_points[1*2+1] = kp2[edges2[j*SIZE+1]*2+1];
-        e2_points[2*2+0] = kp2[edges2[j*SIZE+2]*2+0];
-        e2_points[2*2+1] = kp2[edges2[j*SIZE+2]*2+1];
+        e1_points[0*2+0] = kp1[(edges1[i*3+0])*2+0];
+        e1_points[0*2+1] = kp1[(edges1[i*3+0])*2+1];
+        e1_points[1*2+0] = kp1[(edges1[i*3+1])*2+0];
+        e1_points[1*2+1] = kp1[(edges1[i*3+1])*2+1];
+        e1_points[2*2+0] = kp1[(edges1[i*3+2])*2+0];
+        e1_points[2*2+1] = kp1[(edges1[i*3+2])*2+1];
+        e2_points[0*2+0] = kp2[(edges2[j*3+0])*2+0];
+        e2_points[0*2+1] = kp2[(edges2[j*3+0])*2+1];
+        e2_points[1*2+0] = kp2[(edges2[j*3+1])*2+0];
+        e2_points[1*2+1] = kp2[(edges2[j*3+1])*2+1];
+        e2_points[2*2+0] = kp2[(edges2[j*3+2])*2+0];
+        e2_points[2*2+1] = kp2[(edges2[j*3+2])*2+1];
 
         float sim_angles = d_sim_angles(e1_points, e2_points);
+        matches[i*edges2Size+j] = sim_angles;
 
-       /* float sines1[3];
-        float sines2[3];
-        sines1[0] = sin(acos(D_DOT_1/NORMV1_1/NORMV2_1));
-        sines1[1] = sin(acos(D_DOT_2/NORMV1_2/NORMV2_2));
-        sines1[2] = sin(acos(D_DOT_3/NORMV1_3/NORMV2_3));
-        sines2[0] = sin(acos(D_DOT_4/NORMV1_4/NORMV2_4));
-        sines2[1] = sin(acos(D_DOT_5/NORMV1_5/NORMV2_5));
-        sines2[2] = sin(acos(D_DOT_6/NORMV1_6/NORMV2_6));*/
-        /*double sum1=fabs(sines1_0-sines2_0)+fabs(sines1_1-sines2_1)+fabs(sines1_2-sines2_2);
-        double sum2=fabs(sines1_0-sines2_0)+fabs(sines1_2-sines2_2)+fabs(sines1_1-sines2_1);
-        double sum3=fabs(sines1_1-sines2_1)+fabs(sines1_0-sines2_0)+fabs(sines1_2-sines2_2);
-        double sum4=fabs(sines1_1-sines2_1)+fabs(sines1_2-sines2_2)+fabs(sines1_1-sines2_1);
-        double sum5=fabs(sines1_2-sines2_2)+fabs(sines1_0-sines2_0)+fabs(sines1_1-sines2_1);
-        double sum6=fabs(sines1_2-sines2_2)+fabs(sines1_1-sines2_1)+fabs(sines1_2-sines2_2);*/
-
-        /*double sum1=fabs(sines1[0]-sines2[0])+fabs(sines1[1]-sines2[1])+fabs(sines1[2]-sines2[2]);
-        double sum2=fabs(sines1[0]-sines2[0])+fabs(sines1[2]-sines2[2])+fabs(sines1[1]-sines2[1]);
-        double sum3=fabs(sines1[1]-sines2[1])+fabs(sines1[0]-sines2[0])+fabs(sines1[2]-sines2[2]);
-        double sum4=fabs(sines1[1]-sines2[1])+fabs(sines1[2]-sines2[2])+fabs(sines1[1]-sines2[1]);
-        double sum5=fabs(sines1[2]-sines2[2])+fabs(sines1[0]-sines2[0])+fabs(sines1[1]-sines2[1]);
-        double sum6=fabs(sines1[2]-sines2[2])+fabs(sines1[1]-sines2[1])+fabs(sines1[2]-sines2[2]);*/
-
-        /*double minimo;
-        if(sum1<=sum2)
-            minimo=sum1;
-        else
-            minimo=sum2;
-        if(sum3<minimo)
-            minimo=sum3;
-        if(sum4<minimo)
-            minimo=sum4;
-        if(sum5<minimo)
-            minimo=sum5;
-        if(sum6<minimo)
-            minimo=sum6;*/
-
-        //sines = exp(-min/SIGMA);
-        if(i==0&&j==0)
-            matches[i*edges2Size+j] = sim_angles;
     }
+
     free(e1_points);free(e2_points);
 }
-
-/*__global__ void calculate_e1_points(int *edges1, float *kp1, int edges1Size, float *e1_points){
-    int i = blockIdx.x*blockDim.x+threadIdx.x;
-    int j;
-    if(i<edges1Size){
-        e1_points[i*6+0] = edges1[0*SIZE+0];
-        e1_points[i*6+1] = kp1[(edges1[i*SIZE+0])*2+1];
-        e1_points[i*6+2] = kp1[(edges1[i*SIZE+1])*2+0];
-        e1_points[i*6+3] = kp1[(edges1[i*SIZE+1])*2+1];
-        e1_points[i*6+4] = kp1[(edges1[i*SIZE+2])*2+0];
-        e1_points[i*6+5] = kp1[(edges1[i*SIZE+2])*2+1];
-    }
-}*/
-

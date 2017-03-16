@@ -229,9 +229,9 @@ int main(int argc, const char *argv[]) {
   vector<vector<int> > Edges2 = delaunayTriangulation(img2, kpts2);
 
   size_t valor;
-  valor = 128*1024*1024;
+  valor = 256*1024*1024;
   cudaDeviceSetLimit(cudaLimitMallocHeapSize, valor);
-  valor = 64 * 1024;
+  valor = 80 * 1024;
   cudaDeviceSetLimit(cudaLimitStackSize, valor);
 
   cudaDeviceGetLimit(&valor, cudaLimitStackSize);
@@ -290,18 +290,27 @@ int main(int argc, const char *argv[]) {
   test = (float*)malloc(Edges1.size()*Edges2.size()*sizeof(float));
   gpuErrchk(cudaMalloc((void**)&d_test,sizeof(float)*Edges1.size()*Edges2.size()));
 
-  float sizeX = (float)Edges1.size();
-  float sizeY = (float)Edges2.size();
+  float sizeX = (float)Edges2.size();
+  float sizeY = (float)Edges1.size();
   dim3 dimGrid(ceil(sizeX/16.0),ceil(sizeY/16.0),1);
-  dim3 dimBlock(16,16,1);
-  //calculate_e1_points<<<dimGrid,dimBlock>>>(d_edges1Array, d_keyPoints1Array, Edges1.size(),d_test);
+  dim3 dimBlock(16.0,16.0,1);
   d_hyperedges<<<dimGrid,dimBlock>>> (d_edges1Array, d_edges2Array, d_keyPoints1Array, d_keyPoints2Array,
         d_descriptor1Array, d_descriptor2Array, 10, 10, 3, 0.75,
         Edges1.size(), Edges2.size(), d_test);
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());
   cudaMemcpy(test, d_test, Edges1.size()*sizeof(float)*Edges2.size(), cudaMemcpyDeviceToHost);
-  cout << "sin test "<< test[0] <<endl;
+  cout << "sin test "<< test[0]<<endl;
+
+  FILE *fileTest;
+  fileTest = fopen("sim_anglesTest","w");
+  for (int i = 0; i < Edges1.size(); i++) {
+      for (int j = 0; j < Edges2.size(); j++) {
+          fprintf(fileTest,"%0.2f ", test[i*Edges2.size()+j]);
+      }
+      fprintf(fileTest,"\n");
+  }
+  fclose(fileTest);
 
   cout << Edges1.size() << " Edges from image 1" << endl;
   cout << Edges2.size() << " Edges from image 2" << endl;

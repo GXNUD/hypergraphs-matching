@@ -23,6 +23,8 @@ namespace match {
         c1 /= _sum;
         c2 /= _sum;
         c3 /= _sum;
+        FILE *fileReal;
+        fileReal = fopen("sim_anglesReal","w");
 
         for (int i = 0; i < edges1.size(); i++) {
             int best_match_idx = -1;
@@ -46,6 +48,8 @@ namespace match {
                 double similarity = c1 * sim_ratios + c2 * sim_angles +
                                     c3 * sim_desc;
 
+                fprintf(fileReal,"%0.2lf ", sim_angles);
+
                 if(i==0 && j==0)
                     cout <<"e1_points real: " << sim_angles << endl;
 
@@ -60,7 +64,10 @@ namespace match {
             if (max_similarity >= thresholding) {
                 matches.push_back(make_pair(i, best_match_idx));
             }
+            fprintf(fileReal,"\n");
         }
+
+        fclose(fileReal);
         return matches;
     }
 
