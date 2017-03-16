@@ -37,7 +37,7 @@ __device__ float vectorsAngleSin(float pivot_x, float pivot_y, float p_x, float 
     float v1_y = p_y - pivot_y;
     float v2_x = q_x - pivot_x;
     float v2_y = q_y - pivot_y;
-    float dot = v1_x*v2_x+v1_y+v2_y;
+    float dot = v1_x*v2_x+v1_y*v2_y;
     float angle = acos(dot/sqrt((v1_x*v1_x)+(v1_y*v1_y))/sqrt((v2_x*v2_x)+(v2_y*v2_y)));
     return sin(angle);
 }
@@ -57,8 +57,8 @@ __device__ float* d_getAnglesSin(float *p){
 }
 
 __device__ float d_sim_angles(float *p, float *q){
-    float *sines1 = (float*)malloc(3*sizeof(float));
-    float *sines2 = (float*)malloc(3*sizeof(float));
+    float *sines1;// = (float*)malloc(3*sizeof(float));
+    float *sines2;// = (float*)malloc(3*sizeof(float));
     sines1 = d_getAnglesSin(p);
     sines2 = d_getAnglesSin(q);
     float min_diff_between_sin = 1E30;
