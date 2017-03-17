@@ -1,35 +1,55 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//#define SIZE 3
-//#define SIZE_POINTS 6
-/*#define D_DOT_1 (p[2]-p[0])*(p[4]-p[0])+(p[2]-p[1])*(p[5]-p[1])
-#define NORMV1_1 sqrt((p[2]-p[0])*(p[2]-p[0])+(p[2]-p[1])*(p[2]-p[1]))
-#define NORMV2_1 sqrt((p[4]-p[0])*(p[4]-p[0])+(p[5]-p[1])*(p[5]-p[1]))
-#define D_DOT_2 (p[0]-p[2])*(p[4]-p[2])+(p[1]-p[3])*(p[5]-p[3])
-#define NORMV1_2 sqrt((p[0]-p[2])*(p[0]-p[2])+(p[1]-p[3])*(p[1]-p[3]))
-#define NORMV2_2 sqrt((p[4]-p[2])*(p[4]-p[2])+(p[5]-p[3])*(p[5]-p[3]))
-#define D_DOT_3 (p[0]-p[4])*(p[2]-p[4])+(p[1]-p[5])*(p[3]-p[5])
-#define NORMV1_3 sqrt((p[0]-p[4])*(p[0]-p[4])+(p[1]-p[5])*(p[1]-p[5]))
-#define NORMV2_3 sqrt((p[2]-p[4])*(p[2]-p[4])+(p[3]-p[4])*(p[3]-p[4]))
-#define D_DOT_4 (q[2]-q[0])*(q[4]-q[0])+(q[2]-q[1])*(q[5]-q[1])
-#define NORMV1_4 sqrt((q[2]-q[0])*(q[2]-q[0])+(q[2]-q[1])*(q[2]-q[1]))
-#define NORMV2_4 sqrt((q[4]-q[0])*(q[4]-q[0])+(q[5]-q[1])*(q[5]-p[1]))
-#define D_DOT_5 (q[0]-q[2])*(q[4]-q[2])+(q[1]-q[3])*(q[5]-q[3])
-#define NORMV1_5 sqrt((q[0]-q[2])*(q[0]-q[2])+(q[1]-q[3])*(q[1]-q[3]))
-#define NORMV2_5 sqrt((q[4]-q[2])*(q[4]-q[2])+(q[5]-q[3])*(q[5]-q[3]))
-#define D_DOT_6 (q[0]-q[4])*(q[2]-q[4])+(q[1]-q[5])*(q[3]-q[5])
-#define NORMV1_6 sqrt((q[0]-q[4])*(q[0]-q[4])+(q[1]-q[5])*(q[1]-q[5]))
-#define NORMV2_6 sqrt((q[2]-q[4])*(q[2]-q[4])+(q[3]-q[4])*(q[3]-q[4]))
-#define sines1_0 sin(acos(D_DOT_1/NORMV1_1/NORMV2_1))
-#define sines1_1 sin(acos(D_DOT_2/NORMV1_2/NORMV2_2))
-#define sines1_2 sin(acos(D_DOT_3/NORMV1_3/NORMV2_3))
-#define sines2_0 sin(acos(D_DOT_4/NORMV1_4/NORMV2_4))
-#define sines2_1 sin(acos(D_DOT_5/NORMV1_5/NORMV2_5))
-#define sines2_2 sin(acos(D_DOT_6/NORMV1_6/NORMV2_6))*/
-
 #define SIGMA 0.5
 
+__device__ int* d_getCombination(int n, int r){
+    bool *v = (bool*)malloc(sizeof(bool)*n);
+    int *combinations = (int*)malloc(sizeof(int)*3*2);
+    v[0] = true; v[1] = true; v[2] = false;
+    for (int i = 0; i < n; i++) {
+        if(v[i]){
+            combinations[0*2+i] = i;
+        }
+    }
+    v[0] = true; v[1] = false; v[2] = true;
+    for (int i = 0; i < n; i++) {
+        if(v[i]){
+            combinations[1*2+i] = i;
+        }
+    }
+    v[0] = false; v[1] = true; v[2] = true;
+    for (int i = 0; i < n; i++) {
+        if(v[i]){
+            combinations[2*2+i] = i;
+        }
+    }
+
+    free(v);
+    return combinations;
+
+}
+
+__device__ float d_ratios(float *p, float *q){
+    float *idx_perm = d_getCombination(3,2);
+    float *sides_p = (float*)malloc(sizeof(float)*3);
+    float *sides_q = (float*)malloc(sizeof(float)*3);
+    for (int k = 0; k < 3; k++) {
+        int i = idx_perm[k*2+0];
+        int j = idx_perm[k*2+1];
+        int p_x = p[i*2+0] - p[j*2+0];
+        int p_y = p[i*2+1] - p[j*2+1];
+        int q_x = q[i*2+0] - q[j*2+0];
+        int q_y = q[i*2+1] - q[j*2+1];
+        float side_p = sqrt(pow(p_x,2)+pow(p_y,2));
+        float side_q = sqrt(pow(q_x,2)+pow(q_y,2));
+        sides_p[i] = side_p;
+        sides_q[i] = side_q;
+    }
+
+    free(sides_p);free(sides_q);free(idx_perm);
+
+}
 
 __device__ float vectorsAngleSin(float pivot_x, float pivot_y, float p_x, float p_y,
         float q_x, float q_y){

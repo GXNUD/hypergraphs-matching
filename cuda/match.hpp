@@ -15,11 +15,11 @@ namespace match {
                                         vector<KeyPoint> &kp1,
                                         vector<KeyPoint> &kp2,
                                         Mat &desc1, Mat &desc2,
-                                        double c1, double c2, double c3,
-                                        double thresholding) {
-        double sigma = 0.5;
+                                        float c1, float c2, float c3,
+                                        float thresholding) {
+        float sigma = 0.5;
         vector< pair<int, int> > matches;
-        double _sum = c1 + c2 + c3;
+        float _sum = c1 + c2 + c3;
         c1 /= _sum;
         c2 /= _sum;
         c3 /= _sum;
@@ -28,10 +28,10 @@ namespace match {
 
         for (int i = 0; i < edges1.size(); i++) {
             int best_match_idx = -1;
-            double max_similarity = -1E30;
-            double s_ang = -1E30;
-            double s_ratios = -1E30;
-            double s_desc = -1E30;
+            float max_similarity = -1E30;
+            float s_ang = -1E30;
+            float s_ratios = -1E30;
+            float s_desc = -1E30;
             for (int j = 0; j < edges2.size(); j++) {
                 vector<Point2f> e1_points(3), e2_points(3);
                 vector<Mat> des_1(3), des_2(3);
@@ -42,16 +42,16 @@ namespace match {
                     des_2[k] = desc2.row(edges2[j][k]);
                 }
 
-                double sim_angles = sim::angles(e1_points, e2_points, sigma);
-                double sim_ratios = sim::ratios(e1_points, e2_points, sigma);
-                double sim_desc = sim::descriptors(des_1, des_2, sigma);
-                double similarity = c1 * sim_ratios + c2 * sim_angles +
+                float sim_angles = sim::angles(e1_points, e2_points, sigma);
+                float sim_ratios = sim::ratios(e1_points, e2_points, sigma);
+                float sim_desc = sim::descriptors(des_1, des_2, sigma);
+                float similarity = c1 * sim_ratios + c2 * sim_angles +
                                     c3 * sim_desc;
 
-                fprintf(fileReal,"%0.2lf ", sim_angles);
+                fprintf(fileReal,"%0.1f ", sim_angles);
 
-                if(i==0 && j==0)
-                    cout <<"e1_points real: " << sim_angles << endl;
+                if(i==1 && j==50)
+                    cout <<"sin real: " << sim_angles << endl;
 
                 if (similarity > max_similarity) {
                     best_match_idx = j;
@@ -71,10 +71,10 @@ namespace match {
         return matches;
     }
 
-    double descDistance(Mat e1, Mat e2) {
+    float descDistance(Mat e1, Mat e2) {
         Mat diffs;
         absdiff(e1, e2, diffs);
-        double dist = sum(diffs)[0];
+        float dist = sum(diffs)[0];
         return dist;
     }
 
@@ -82,7 +82,7 @@ namespace match {
         vector<pair<int, int> > edge_matches,
         Mat &desc1, Mat &desc2,
         vector<vector<int> > &edges1, vector<vector<int> > &edges2,
-        double th, double sigma = 0.5
+        float th, float sigma = 0.5
     ) {
         vector<DMatch> matches;
         set<pair<int, int> > S;
@@ -96,10 +96,10 @@ namespace match {
             }
 
             vector<int> best_match(3);
-            vector<double> best_sim(3, -1E30);
+            vector<float> best_sim(3, -1E30);
             for (int j = 0; j < 3; j++) {
                 for (int k = 0; k < 3; k++) {
-                    double _sim = exp(-sum(abs(des_1[j] - des_2[k]))[0] / sigma);
+                    float _sim = exp(-sum(abs(des_1[j] - des_2[k]))[0] / sigma);
 
                     if (_sim > best_sim[j]) {
                         best_sim[j] = _sim;
@@ -115,7 +115,7 @@ namespace match {
                 int tI = edges2[ref_edge_idx][k];
 
                 if (!S.count(make_pair(qI, tI)) && best_sim[j] > th) {
-                    double _dist = -sigma * log(best_sim[j]);
+                    float _dist = -sigma * log(best_sim[j]);
                     matches.push_back(DMatch(qI, tI, _dist));
                     S.insert(make_pair(qI, tI));
                 }

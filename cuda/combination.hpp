@@ -6,6 +6,7 @@
 */
 using namespace std;
 
+
 vector<vector<int> > getCombination(int n, int r) {
   vector<bool> v(n);
   vector<vector<int> > combinations;
@@ -15,6 +16,7 @@ vector<vector<int> > getCombination(int n, int r) {
     for (int i = 0; i < n; ++i) {
       if (v[i]) {
           one_combination.push_back(i);
+      }else{
       }
     }
     combinations.push_back(one_combination);

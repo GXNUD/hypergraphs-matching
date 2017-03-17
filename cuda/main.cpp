@@ -239,9 +239,6 @@ int main(int argc, const char *argv[]) {
   cudaDeviceGetLimit(&valor, cudaLimitMallocHeapSize);
   cout << "cudaLimitMallocHeapSize = " << valor/1024 << "KB" << endl;
 
-
-
-
   // Conversion to c array
   int *edges1Array = (int*)malloc(3*Edges1.size()*sizeof(int));
   int *edges2Array = (int*)malloc(3*Edges2.size()*sizeof(int));
@@ -293,20 +290,20 @@ int main(int argc, const char *argv[]) {
   float sizeX = (float)Edges2.size();
   float sizeY = (float)Edges1.size();
   dim3 dimGrid(ceil(sizeX/16.0),ceil(sizeY/16.0),1);
-  dim3 dimBlock(16.0,16.0,1);
+  dim3 dimBlock(16,16,1);
   d_hyperedges<<<dimGrid,dimBlock>>> (d_edges1Array, d_edges2Array, d_keyPoints1Array, d_keyPoints2Array,
         d_descriptor1Array, d_descriptor2Array, 10, 10, 3, 0.75,
         Edges1.size(), Edges2.size(), d_test);
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());
   cudaMemcpy(test, d_test, Edges1.size()*sizeof(float)*Edges2.size(), cudaMemcpyDeviceToHost);
-  cout << "sin test "<< test[0]<<endl;
+  cout << "sin test "<< test[1*Edges2.size()+50]<<endl;
 
   FILE *fileTest;
   fileTest = fopen("sim_anglesTest","w");
   for (int i = 0; i < Edges1.size(); i++) {
       for (int j = 0; j < Edges2.size(); j++) {
-          fprintf(fileTest,"%0.2f ", test[i*Edges2.size()+j]);
+          fprintf(fileTest,"%0.1f ", test[i*Edges2.size()+j]);
       }
       fprintf(fileTest,"\n");
   }
@@ -333,7 +330,7 @@ int main(int argc, const char *argv[]) {
   cout << matches.size() << " Point matches passed!" << endl;
 
   // Draw Point matching
-  //draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
+  draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
 
   free(edges1Array); free(keyPoints1Array); free(keyPoints2Array);
   free(descriptor1Array); free(descriptor2Array);
