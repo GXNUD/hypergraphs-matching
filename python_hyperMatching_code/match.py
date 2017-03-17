@@ -32,7 +32,7 @@ def match(
             _point_idx, _sim, sim_a, sim_r, sim_d = similarity(
                 p, q,
                 dp, dq,
-                cang, crat, cdesc, False
+                cang, crat, cdesc
             )
             if verb:
                 count += 1
