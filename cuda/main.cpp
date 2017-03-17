@@ -13,6 +13,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cmath>
+#include <getopt.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/nonfree/gpu.hpp>
@@ -188,15 +189,16 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
 ##     ## ##     ## #### ##    ##
 */
 
-int main(int argc, const char *argv[]) {
+int doMatch(Mat &img1, Mat &img2, float cang,
+        float crat, float cdesc) {
 
   clock_t begin = clock();
-  GpuMat d_img1( imread("./test-images/monster1s.JPG", 0) );
-  GpuMat d_img2( imread("./test-images/monster1m.JPG", 0) );
+  GpuMat d_img1(img1);
+  GpuMat d_img2(img2);
 
 
-  Mat img1 = imread("./test-images/monster1s.JPG",0);
-  Mat img2 = imread("./test-images/monster1m.JPG",0);
+  //Mat img1 = imread(nameImg1,0);
+  //Mat img2 = imread(nameImg2,0);
 
   // For Surf detection
   int minHessian = 400;
@@ -338,5 +340,97 @@ int main(int argc, const char *argv[]) {
   cudaFree(d_keyPoints1Array); cudaFree(d_keyPoints2Array);
   cudaFree(d_descriptor1Array); cudaFree(d_descriptor2Array);
   free(test); cudaFree(d_test);
+  return 0;
+}
+
+void cright() {
+  cout << "Sample implementation of LYSH algorithm for image matching" << endl;
+  cout << "Copyright (C) 2016 L.A. Campeon, Y.H. Gomez, J.S. Vega, J.H. Osorio." << endl;
+  cout << "This is free software; see the source code for copying conditions." << endl;
+  cout << "There is ABSOLUTELY NO WARRANTY; not even for MERCHANTABILITY or" << endl;
+  cout << "FITNESS FOR A PARTICULAR PURPOSE." << endl;
+  cout << endl;
+}
+
+
+void usage(char* program_name) {
+  int n = 3;
+  string opts[] = {"--cang", "--crat", "--cdesc"};
+  string description[] = {
+    "Constant of angle similarity (default: 1)",
+    "Constant of ratio similarity (default: 1)",
+    "Constant of SURF descriptor similarity (default: 1)"
+  };
+cout << "Usage: " << program_name << " [options ...] img1 img2" << endl;
+  cout << endl;
+  cout << "Matching options" << endl;
+  for (int i = 0; i < n; i++) {
+    cout << "  " << opts[i] << ": " << description[i] << endl;
+  }
+
+  exit(EXIT_FAILURE);
+}
+
+pair<bool, float> toFloat(string s) {
+  stringstream ss(s);
+  float x;
+  ss >> x;
+  if (!ss) {
+    return make_pair(false, 0);
+  }
+  return make_pair(true, x);
+}
+
+int main(int argc, char *argv[]) {
+  int opt, opt_index = 0;
+  static struct option options[] = {
+    {"cang", required_argument, 0, 'a'},
+    {"crat", required_argument, 0, 'r'},
+    {"cdesc", required_argument, 0, 'd'},
+    {0, 0, 0, 0}
+  };
+
+  double cang = 1, crat = 1, cdesc = 1;
+  pair<bool, double> convert_type(true, 0);
+  while ((opt = getopt_long(argc, argv, "a:r:d:", options, &opt_index)) != -1) {
+    switch (opt) {
+      case 'a':
+        convert_type = toFloat(optarg);
+        cang = convert_type.second;
+        break;
+      case 'r':
+        convert_type = toFloat(optarg);
+        crat = convert_type.second;
+        break;
+      case 'd':
+        convert_type = toFloat(optarg);
+        cdesc = convert_type.second;
+        break;
+      default:
+        usage(argv[0]);
+        break;
+    }
+  }
+
+  if (!convert_type.first) {
+    usage(argv[0]);
+  }
+
+  if (argc - optind != 2) {
+    cout << "Error: You must provide two images" << endl << endl;
+    usage(argv[0]);
+  }
+
+  vector<Mat> img(2);
+  for (int i = optind, j = 0; i < argc; i++, j++) {
+    img[j] = imread(argv[i], CV_LOAD_IMAGE_GRAYSCALE);
+    if (!img[j].data) {
+      cout << "Error: img1 and img2 must be valid images both" << endl << endl;
+      usage(argv[0]);
+    }
+  }
+
+  doMatch(img[0], img[1], cang, crat, cdesc);
+
   return 0;
 }
