@@ -18,7 +18,7 @@
 #include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/nonfree/gpu.hpp>
 #include "match.hpp"
-#include "d_match.hpp"
+#include "d_match2.hpp"
 #include "draw.hpp"
 #include <time.h>
 
@@ -289,10 +289,10 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   test = (float*)malloc(Edges1.size()*Edges2.size()*sizeof(float));
   gpuErrchk(cudaMalloc((void**)&d_test,sizeof(float)*Edges1.size()*Edges2.size()));
 
-  float sizeX = (float)Edges2.size();
-  float sizeY = (float)Edges1.size();
-  dim3 dimGrid(ceil(sizeX/16.0),ceil(sizeY/16.0),1);
-  dim3 dimBlock(16,16,1);
+  float sizeX = (float)Edges1.size();
+  //float sizeY = (float)Edges1.size();
+  dim3 dimGrid(ceil(sizeX/16.0),1/*ceil(sizeY/16.0)*/,1);
+  dim3 dimBlock(16,1/*16*/,1);
   d_hyperedges<<<dimGrid,dimBlock>>> (d_edges1Array, d_edges2Array, d_keyPoints1Array, d_keyPoints2Array,
         d_descriptor1Array, d_descriptor2Array, 10, 10, 3, 0.75,
         Edges1.size(), Edges2.size(), d_test);

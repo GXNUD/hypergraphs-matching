@@ -187,7 +187,7 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
         float sim_angles = d_sim_angles(e1_points, e2_points);
         float sim_ratios = d_ratios(e1_points, e2_points);
 
-        matches[i*edges2Size+j] = sim_ratios;
+        matches[i*edges2Size+j] = sim_angles;
 
     }
 
