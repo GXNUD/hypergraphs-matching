@@ -9,29 +9,35 @@ __device__ int* d_getCombination(int n, int r){
     v[0] = true; v[1] = true; v[2] = false;
     for (int i = 0; i < n; i++) {
         if(v[i]){
-            combinations[0*2+i] = i;
+            combinations[i*2+0] = i;
         }
     }
     v[0] = true; v[1] = false; v[2] = true;
     for (int i = 0; i < n; i++) {
         if(v[i]){
-            combinations[1*2+i] = i;
+            combinations[i*2+1] = i;
         }
     }
-    v[0] = false; v[1] = true; v[2] = true;
+   /* v[0] = false; v[1] = true; v[2] = true;
     for (int i = 0; i < n; i++) {
         if(v[i]){
             combinations[2*2+i] = i;
         }
-    }
+    }*/
 
     free(v);
+    combinations[0] = 0;
+    combinations[1] = 0;
+    combinations[2] = 0;
+    combinations[3] = 0;
+    combinations[4] = 0;
+    combinations[5] = 0;
     return combinations;
 
 }
 
 __device__ float d_ratios(float *p, float *q){
-    float *idx_perm = d_getCombination(3,2);
+    int *idx_perm = d_getCombination(3,2);
     float *sides_p = (float*)malloc(sizeof(float)*3);
     float *sides_q = (float*)malloc(sizeof(float)*3);
     for (int k = 0; k < 3; k++) {
@@ -47,7 +53,43 @@ __device__ float d_ratios(float *p, float *q){
         sides_q[i] = side_q;
     }
 
+    float min_err = 1E30;
+    float sum = 0;
+    float *r = (float*)malloc(sizeof(float)*3);
+
+    r[0] = sides_p[0] / sides_q[0];r[1] = sides_p[1] / sides_q[1];r[2] = sides_p[2] / sides_q[2];
+    sum = fabs(r[idx_perm[0*2+0]]-r[idx_perm[0*2+1]])+fabs(r[idx_perm[1*2+0]]-r[idx_perm[1*2+1]])
+        +fabs(r[idx_perm[2*2+0]]-r[idx_perm[2*2+1]]);
+    min_err = min(sum, min_err);
+
+    r[0] = sides_p[0] / sides_q[0];r[1] = sides_p[1] / sides_q[2];r[2] = sides_p[2] / sides_q[1];
+    sum = fabs(r[idx_perm[0*2+0]]-r[idx_perm[0*2+1]])+fabs(r[idx_perm[1*2+0]]-r[idx_perm[1*2+1]])
+        +fabs(r[idx_perm[2*2+0]]-r[idx_perm[2*2+1]]);
+    min_err = min(sum, min_err);
+
+    r[0] = sides_p[0] / sides_q[1];r[1] = sides_p[1] / sides_q[0];r[2] = sides_p[2] / sides_q[2];
+    sum = fabs(r[idx_perm[0*2+0]]-r[idx_perm[0*2+1]])+fabs(r[idx_perm[1*2+0]]-r[idx_perm[1*2+1]])
+        +fabs(r[idx_perm[2*2+0]]-r[idx_perm[2*2+1]]);
+    min_err = min(sum, min_err);
+
+    r[0] = sides_p[0] / sides_q[1];r[1] = sides_p[1] / sides_q[2];r[2] = sides_p[2] / sides_q[0];
+    sum = fabs(r[idx_perm[0*2+0]]-r[idx_perm[0*2+1]])+fabs(r[idx_perm[1*2+0]]-r[idx_perm[1*2+1]])
+        +fabs(r[idx_perm[2*2+0]]-r[idx_perm[2*2+1]]);
+    min_err = min(sum, min_err);
+
+    r[0] = sides_p[0] / sides_q[2];r[1] = sides_p[1] / sides_q[0];r[2] = sides_p[2] / sides_q[1];
+    sum = fabs(r[idx_perm[0*2+0]]-r[idx_perm[0*2+1]])+fabs(r[idx_perm[1*2+0]]-r[idx_perm[1*2+1]])
+        +fabs(r[idx_perm[2*2+0]]-r[idx_perm[2*2+1]]);
+    min_err = min(sum, min_err);
+
+    r[0] = sides_p[0] / sides_q[2];r[1] = sides_p[1] / sides_q[1];r[2] = sides_p[2] / sides_q[0];
+    sum = fabs(r[idx_perm[0*2+0]]-r[idx_perm[0*2+1]])+fabs(r[idx_perm[1*2+0]]-r[idx_perm[1*2+1]])
+        +fabs(r[idx_perm[2*2+0]]-r[idx_perm[2*2+1]]);
+    min_err = min(sum, min_err);
+
     free(sides_p);free(sides_q);free(idx_perm);
+    return(-min_err/0.5);
+
 
 }
 
@@ -143,7 +185,9 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
         e2_points[2*2+1] = kp2[(edges2[j*3+2])*2+1];
 
         float sim_angles = d_sim_angles(e1_points, e2_points);
-        matches[i*edges2Size+j] = sim_angles;
+        float sim_ratios = d_ratios(e1_points, e2_points);
+
+        matches[i*edges2Size+j] = sim_ratios;
 
     }
 
