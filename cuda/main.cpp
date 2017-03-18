@@ -239,7 +239,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   cudaDeviceGetLimit(&valor, cudaLimitStackSize);
   cout << "cudaLimitStackSize = " << valor/1024 << "KB" << endl;
   cudaDeviceGetLimit(&valor, cudaLimitMallocHeapSize);
-  cout << "cudaLimitMallocHeapSize = " << valor/1024 << "KB" << endl;
+  cout << "cudaLimitMallocHeapSize = " << valor/1024/1024 << "MB" << endl;
 
   // Conversion to c array
   int *edges1Array = (int*)malloc(3*Edges1.size()*sizeof(int));

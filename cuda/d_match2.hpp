@@ -3,6 +3,13 @@
 
 #define SIGMA 0.5
 
+typedef struct MatchSimilarity
+{
+    float sim_a, sim_r, sim_d, sim;
+    int2 *permutation;
+}MatchS;
+
+
 __device__ float d_angle(float2 *p, int i){
     float2 a;
     float2 b;
@@ -72,7 +79,7 @@ __device__ float d_sim_desc(float *dp, float *dq, int2 *idx){
 
 }
 
-__device__ float d_similarity(float2 *p, float2 *q, float *dp, float *dq,
+__device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *dq,
         float cang, float crat, float cdesc){
 
     int2 perms_0[3],perms_1[3],perms_2[3];
@@ -124,64 +131,90 @@ __device__ float d_similarity(float2 *p, float2 *q, float *dp, float *dq,
     cang /= s;
     crat /= s;
     cdesc /= s;
-    float max_sim = -1E30;
-    float sim_a, sim_r, sim_d, sim;
+    float sim = -1E30;
+    float _sim_a, _sim_r, _sim_d, _sim, sim_a, sim_r, sim_d;
 
-    sim_a = d_sim_angles(p,q,perms_0);
-    sim_r = d_sim_ratios(p,q,perms_0);
-    sim_d = d_sim_desc(dp,dq,perms_0);
-    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
-    if(sim>max_sim){
-        max_sim = sim;
+    _sim_a = d_sim_angles(p,q,perms_0);
+    _sim_r = d_sim_ratios(p,q,perms_0);
+    _sim_d = d_sim_desc(dp,dq,perms_0);
+    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
+    if(_sim>sim){
         point_match = perms_0;
+        sim_a = _sim_a;
+        sim_r = _sim_r;
+        sim_d = _sim_d;
+        sim = _sim;
     }
 
-    sim_a = d_sim_angles(p,q,perms_1);
-    sim_r = d_sim_ratios(p,q,perms_1);
-    sim_d = d_sim_desc(dp,dq,perms_1);
-    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
-    if(sim>max_sim){
-        max_sim = sim;
+    _sim_a = d_sim_angles(p,q,perms_1);
+    _sim_r = d_sim_ratios(p,q,perms_1);
+    _sim_d = d_sim_desc(dp,dq,perms_1);
+    _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(_sim>sim){
         point_match = perms_1;
+        sim_a = _sim_a;
+        sim_r = _sim_r;
+        sim_d = _sim_d;
+        sim = _sim;
     }
 
-    sim_a = d_sim_angles(p,q,perms_2);
-    sim_r = d_sim_ratios(p,q,perms_2);
-    sim_d = d_sim_desc(dp,dq,perms_2);
-    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
-    if(sim>max_sim){
-        max_sim = sim;
+    _sim_a = d_sim_angles(p,q,perms_2);
+    _sim_r = d_sim_ratios(p,q,perms_2);
+    _sim_d = d_sim_desc(dp,dq,perms_2);
+    _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(_sim>sim){
         point_match = perms_2;
-    }
+        sim_a = _sim_a;
+        sim_r = _sim_r;
+        sim_d = _sim_d;
+        sim = _sim;
+   }
 
-    sim_a = d_sim_angles(p,q,perms_3);
-    sim_r = d_sim_ratios(p,q,perms_3);
-    sim_d = d_sim_desc(dp,dq,perms_3);
-    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
-    if(sim>max_sim){
-        max_sim = sim;
+    _sim_a = d_sim_angles(p,q,perms_3);
+    _sim_r = d_sim_ratios(p,q,perms_3);
+    _sim_d = d_sim_desc(dp,dq,perms_3);
+    _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(_sim>sim){
         point_match = perms_3;
+        sim_a = _sim_a;
+        sim_r = _sim_r;
+        sim_d = _sim_d;
+        sim = _sim;
     }
 
-    sim_a = d_sim_angles(p,q,perms_4);
-    sim_r = d_sim_ratios(p,q,perms_4);
-    sim_d = d_sim_desc(dp,dq,perms_4);
-    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
-    if(sim>max_sim){
-        max_sim = sim;
+    _sim_a = d_sim_angles(p,q,perms_4);
+    _sim_r = d_sim_ratios(p,q,perms_4);
+    _sim_d = d_sim_desc(dp,dq,perms_4);
+    _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(_sim>sim){
         point_match = perms_4;
-    }
+        sim_a = _sim_a;
+        sim_r = _sim_r;
+        sim_d = _sim_d;
+        sim = _sim;
+   }
 
-    sim_a = d_sim_angles(p,q,perms_5);
-    sim_r = d_sim_ratios(p,q,perms_5);
-    sim_d = d_sim_desc(dp,dq,perms_5);
-    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
-    if(sim>max_sim){
-        max_sim = sim;
+    _sim_a = d_sim_angles(p,q,perms_5);
+    _sim_r = d_sim_ratios(p,q,perms_5);
+    _sim_d = d_sim_desc(dp,dq,perms_5);
+    _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(_sim>sim){
         point_match = perms_5;
-    }
+        sim_a = _sim_a;
+        sim_r = _sim_r;
+        sim_d = _sim_d;
+        sim = _sim;
+  }
 
-    return max_sim;
+    MatchSimilarity finalSimilarity;
+
+    finalSimilarity.sim_a = sim_a;
+    finalSimilarity.sim_r = sim_r;
+    finalSimilarity.sim_d = sim_d;
+    finalSimilarity.sim = sim;
+    finalSimilarity.permutation = point_match;
+
+    return finalSimilarity;
 }
 
 
@@ -201,7 +234,11 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
     desc_p = (float*)malloc(desc1Cols*sizeof(float)*3);
     desc_q = (float*)malloc(desc2Cols*sizeof(float)*3);
 
+    float best_index, max_similarity, s_ang, s_ratios, s_desc;
+    int2 edge_match_indices[3];
+
     if (i < edges1Size){
+        max_similarity = -1E30;
         for (int j = 0; j < edges2Size; j++) {
             //keyPoints
             p[0].x = kp1[(edges1[i*3+0])*2+0];
@@ -229,9 +266,21 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
                 desc_q[2*desc2Cols+ii] = desc2[(edges2[j*3+2])*desc2Cols+ii];
             }
 
-
-            float sim = d_similarity(p,q,desc_p,desc_q,cang,crat,cdesc);
-            matches[i*edges2Size+j] = sim;
+            MatchSimilarity finalSimilarity = d_similarity(p,q,desc_p,desc_q,cang,crat,cdesc);
+            if(finalSimilarity.sim > max_similarity){
+                best_index = j;
+                max_similarity = finalSimilarity.sim;
+                s_ang = finalSimilarity.sim_a;
+                s_ratios = finalSimilarity.sim_r;
+                s_desc = finalSimilarity.sim_d;
+                for (int ii = 0; ii < 3 ; ii++) {
+                    int p_i = finalSimilarity.permutation[ii].x;
+                    int q_i = finalSimilarity.permutation[ii].y;
+                    edge_match_indices[ii].x = edges1[p_i*3+ii];
+                    edge_match_indices[ii].y = edges2[q_i*3+ii];
+                }
+            }
+            matches[i*edges2Size+j] = (float)edge_match_indices[0].y;
         }
     }
 
