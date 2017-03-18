@@ -48,10 +48,10 @@ namespace match {
                 float similarity = c1 * sim_ratios + c2 * sim_angles +
                                     c3 * sim_desc;
 
-                fprintf(fileReal,"%0.1f ", e1_points[0].x);
+                fprintf(fileReal,"%0.1f ", sim_ratios);
 
                 if(i==1 && j==50)
-                    cout <<"sin real: " << e1_points[0].x << endl;
+                    cout <<"sin real: " << sim_ratios << endl;
 
                 if (similarity > max_similarity) {
                     best_match_idx = j;

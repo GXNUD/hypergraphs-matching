@@ -50,7 +50,8 @@ __device__ float d_sim_ratios(float2 *p, float2 *q, int2 *idx){
     R2 = d_opposite_side(p,i2)/d_opposite_side(q,j2);
     R3 = d_opposite_side(p,i3)/d_opposite_side(q,j3);
     float mean = (R1 + R2 + R3)/3.0;
-    return ((R1-mean)+(R2-mean)+(R3-mean))/3.0;
+    float standard = (pow((R1-mean),2)+(pow(R2-mean,2))+(pow(R3-mean,2)))/3.0;
+    return exp(-standard/0.5);
 }
 
 
@@ -103,7 +104,7 @@ __device__ float d_similarity(float2 *p, float2 *q){
 
     float sim_a = d_sim_angles(p,q,perms_0);
     float sim_r = d_sim_ratios(p,q,perms_0);
-    return sim_a;
+    return sim_r;
 }
 
 
@@ -133,7 +134,7 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
             q[2].x = kp2[(edges2[j*3+2])*2+0];
             q[2].y = kp2[(edges2[j*3+2])*2+1];
             float sim_a = d_similarity(p,q);
-            matches[i*edges2Size+j] = p[0].x;
+            matches[i*edges2Size+j] = sim_a;//p[0].x;
         }
     }
 
