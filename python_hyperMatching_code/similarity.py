@@ -30,7 +30,7 @@ def sim_angles(p, q, idx1, idx2, idx3):
     ]) / SIGMA)
 
 
-def oposite_side(p, i):
+def opposite_side(p, i):
     return LA.norm(np.subtract(p[(i + 1) % 3], p[(i + 2) % 3]))
 
 
@@ -38,9 +38,9 @@ def sim_ratios(p, q, idx1, idx2, idx3):
     i1, j1 = idx1
     i2, j2 = idx2
     i3, j3 = idx3
-    R1 = oposite_side(p, i1) / oposite_side(q, j1)
-    R2 = oposite_side(p, i2) / oposite_side(q, j2)
-    R3 = oposite_side(p, i3) / oposite_side(q, j3)
+    R1 = opposite_side(p, i1) / opposite_side(q, j1)
+    R2 = opposite_side(p, i2) / opposite_side(q, j2)
+    R3 = opposite_side(p, i3) / opposite_side(q, j3)
     return exp(-np.std([R1, R2, R3]) / SIGMA)
 
 
