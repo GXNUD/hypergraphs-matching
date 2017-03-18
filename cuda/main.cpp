@@ -254,6 +254,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
 
 
   cout << "tamano kpts1 : " <<kpts1.size()<<endl;
+  cout << "tamano descriptors : "<< descriptor1.size() << " "<< descriptor2.size() << endl;
 
   // Conversion of KeyPoint to array
   // La columna cero del arreglo hace referencia a X y la 1 a Y
@@ -294,7 +295,8 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   dim3 dimGrid(ceil(sizeX/16.0),1/*ceil(sizeY/16.0)*/,1);
   dim3 dimBlock(16,1/*16*/,1);
   d_hyperedges<<<dimGrid,dimBlock>>> (d_edges1Array, d_edges2Array, d_keyPoints1Array, d_keyPoints2Array,
-        d_descriptor1Array, d_descriptor2Array, 10, 10, 3, 0.75,
+        d_descriptor1Array, d_descriptor2Array, descriptor1.rows, descriptor1.cols,
+        descriptor2.rows, descriptor2.cols, 10, 10, 3, 0.75,
         Edges1.size(), Edges2.size(), d_test);
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());

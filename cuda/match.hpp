@@ -51,7 +51,7 @@ namespace match {
                 fprintf(fileReal,"%0.1f ", sim_ratios);
 
                 if(i==1 && j==50)
-                    cout <<"sin real: " << sim_ratios << endl;
+                    cout <<"sin real: " << sim_desc << endl;
 
                 if (similarity > max_similarity) {
                     best_match_idx = j;

@@ -54,12 +54,30 @@ __device__ float d_sim_ratios(float2 *p, float2 *q, int2 *idx){
     return exp(-standard/0.5);
 }
 
+__device__ float d_sim_desc(float *dp, float *dq, int2 *idx){
+    int i1 = idx[0].x;
+    int j1 = idx[0].y;
+    int i2 = idx[1].x;
+    int j2 = idx[1].y;
+    int i3 = idx[2].x;
+    int j3 = idx[2].y;
+    float a = dp[i1]-dq[j1];
+    float b = dp[i2]-dq[j2];
+    float c = dp[i3]-dq[j3];
+    a = sqrt(pow(a,2));
+    b = sqrt(pow(b,2));
+    c = sqrt(pow(b,2));
 
+    return ((a+b+c)/3.0)/0.5;
 
-__device__ float d_similarity(float2 *p, float2 *q){
+}
+
+__device__ float d_similarity(float2 *p, float2 *q, float *dp, float *dq,
+        float cang, float crat, float cdesc){
 
     int2 perms_0[3],perms_1[3],perms_2[3];
     int2 perms_3[3],perms_4[3],perms_5[3];
+    int2 *point_match;
     perms_0[0].x = 0;
     perms_0[0].y = 0;
     perms_0[1].x = 1;
@@ -102,25 +120,90 @@ __device__ float d_similarity(float2 *p, float2 *q){
     perms_5[2].x = 2;
     perms_5[2].y = 2;
 
-    float sim_a = d_sim_angles(p,q,perms_0);
-    float sim_r = d_sim_ratios(p,q,perms_0);
-    return sim_r;
+    float s = cang + crat + cdesc;
+    cang /= s;
+    crat /= s;
+    cdesc /= s;
+    float max_sim = -1E30;
+    float sim_a, sim_r, sim_d, sim;
+
+    sim_a = d_sim_angles(p,q,perms_0);
+    sim_r = d_sim_ratios(p,q,perms_0);
+    sim_d = d_sim_desc(dp,dq,perms_0);
+    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(sim>max_sim){
+        max_sim = sim;
+        point_match = perms_0;
+    }
+
+    sim_a = d_sim_angles(p,q,perms_1);
+    sim_r = d_sim_ratios(p,q,perms_1);
+    sim_d = d_sim_desc(dp,dq,perms_1);
+    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(sim>max_sim){
+        max_sim = sim;
+        point_match = perms_1;
+    }
+
+    sim_a = d_sim_angles(p,q,perms_2);
+    sim_r = d_sim_ratios(p,q,perms_2);
+    sim_d = d_sim_desc(dp,dq,perms_2);
+    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(sim>max_sim){
+        max_sim = sim;
+        point_match = perms_2;
+    }
+
+    sim_a = d_sim_angles(p,q,perms_3);
+    sim_r = d_sim_ratios(p,q,perms_3);
+    sim_d = d_sim_desc(dp,dq,perms_3);
+    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(sim>max_sim){
+        max_sim = sim;
+        point_match = perms_3;
+    }
+
+    sim_a = d_sim_angles(p,q,perms_4);
+    sim_r = d_sim_ratios(p,q,perms_4);
+    sim_d = d_sim_desc(dp,dq,perms_4);
+    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(sim>max_sim){
+        max_sim = sim;
+        point_match = perms_4;
+    }
+
+    sim_a = d_sim_angles(p,q,perms_5);
+    sim_r = d_sim_ratios(p,q,perms_5);
+    sim_d = d_sim_desc(dp,dq,perms_5);
+    sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    if(sim>max_sim){
+        max_sim = sim;
+        point_match = perms_5;
+    }
+
+    return max_sim;
 }
 
 
 __global__ void d_hyperedges (int *edges1, int *edges2,
         float *kp1, float *kp2,
-        float *desc1, float *desc2, double c1,
-        double c2, double c3, double thresholding,
+        float *desc1, float *desc2, int desc1Rows,
+        int desc1Cols, int desc2Rows, int desc2Cols, float cang,
+        float crat, double cdesc, double thresholding,
         int edges1Size, int edges2Size, float *matches){
 
     int i = blockIdx.x*blockDim.x + threadIdx.x;
     float2 *p,*q;
+    float *desc_p, *desc_q;
     p = (float2*) malloc(3*sizeof(float2));
     q = (float2*) malloc(3*sizeof(float2));
 
+    desc_p = (float*)malloc(desc1Cols*sizeof(float)*3);
+    desc_q = (float*)malloc(desc2Cols*sizeof(float)*3);
+
     if (i < edges1Size){
         for (int j = 0; j < edges2Size; j++) {
+            //keyPoints
             p[0].x = kp1[(edges1[i*3+0])*2+0];
             p[0].y = kp1[(edges1[i*3+0])*2+1];
             p[1].x = kp1[(edges1[i*3+1])*2+0];
@@ -133,11 +216,25 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
             q[1].y = kp2[(edges2[j*3+1])*2+1];
             q[2].x = kp2[(edges2[j*3+2])*2+0];
             q[2].y = kp2[(edges2[j*3+2])*2+1];
-            float sim_a = d_similarity(p,q);
-            matches[i*edges2Size+j] = sim_a;//p[0].x;
+            //////////////////////////////////
+            //Descriptors
+            for (int ii = 0; ii < desc1Cols; ii++) {
+                desc_p[0*desc1Cols+ii] = desc1[(edges1[i*3+0])*desc1Cols+ii];
+                desc_p[1*desc1Cols+ii] = desc1[(edges1[i*3+1])*desc1Cols+ii];
+                desc_p[2*desc1Cols+ii] = desc1[(edges1[i*3+2])*desc1Cols+ii];
+            }
+            for (int ii = 0; ii < desc2Cols; ii++) {
+                desc_q[0*desc2Cols+ii] = desc2[(edges2[j*3+0])*desc2Cols+ii];
+                desc_q[1*desc2Cols+ii] = desc2[(edges2[j*3+1])*desc2Cols+ii];
+                desc_q[2*desc2Cols+ii] = desc2[(edges2[j*3+2])*desc2Cols+ii];
+            }
+
+
+            float sim = d_similarity(p,q,desc_p,desc_q,cang,crat,cdesc);
+            matches[i*edges2Size+j] = sim;
         }
     }
 
-    free(p);free(q);
+    free(p);free(q);free(desc_p);free(desc_q);
 
 }
