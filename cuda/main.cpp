@@ -311,8 +311,11 @@ int doMatch(Mat &img1, Mat &img2, float cang,
 
   FILE *fileTest;
   fileTest = fopen("sim_anglesTest","w");
+  fprintf(fileTest,"bestIndex_j,punto1_x,punto1_y,punto2_x,punto2_y,punto3_x,punto3_y\n");
   for (int i = 0; i < Edges1.size(); i++) {
-      fprintf(fileTest,"%d %d %d %d \n", beMatches[i].edge_match_indices[0].x, beMatches[i].edge_match_indices[0].y,  beMatches[i].edge_match_indices[1].x,  beMatches[i].edge_match_indices[1].y);
+      fprintf(fileTest,"%d,%d,%d,%d,%d,%d,%d\n", beMatches[i].bestIndex_j, beMatches[i].edge_match_indices[0].x,
+              beMatches[i].edge_match_indices[0].y,  beMatches[i].edge_match_indices[1].x,
+              beMatches[i].edge_match_indices[1].y, beMatches[i].edge_match_indices[2].x, beMatches[i].edge_match_indices[2].y);
   }
   fclose(fileTest);
 

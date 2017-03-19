@@ -61,11 +61,11 @@ namespace match {
                 }
             }
 
-            fprintf(fileReal,"%f ", max_similarity);
+            fprintf(fileReal,"%d\n", best_match_idx);
             if (max_similarity >= thresholding) {
                 matches.push_back(make_pair(i, best_match_idx));
             }
-            fprintf(fileReal,"\n");
+            //fprintf(fileReal,"\n");
         }
 
         fclose(fileReal);
