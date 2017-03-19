@@ -64,7 +64,8 @@ __device__ float d_sim_ratios(float2 *p, float2 *q, int2 *idx){
     R2 = d_opposite_side(p,i2)/d_opposite_side(q,j2);
     R3 = d_opposite_side(p,i3)/d_opposite_side(q,j3);
     float mean = (R1 + R2 + R3)/3.0;
-    float standard = (pow((R1-mean),2)+(pow(R2-mean,2))+(pow(R3-mean,2)))/3.0;
+    float standard = sqrt((pow((R1-mean),2)+(pow(R2-mean,2))
+            +(pow(R3-mean,2)))/3.0);
     return exp(-standard/0.5);
 }
 
