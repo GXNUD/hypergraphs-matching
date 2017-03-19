@@ -27,8 +27,8 @@ __device__ float d_angle(float2 *p, int i){
     b.y = p[i].y - p[(i+2)%3].y;
 
     float dot = a.x*b.x+a.y*b.y;
-    float angle = acos(dot/sqrt((a.x*a.x)+(a.y*a.y))
-            /sqrt((b.x*b.x)+(b.y*b.y)));
+    float angle = acosf(dot/sqrtf((a.x*a.x)+(a.y*a.y))
+            /sqrtf((b.x*b.x)+(b.y*b.y)));
     return angle;
 }
 
@@ -39,10 +39,10 @@ __device__ float d_sim_angles(float2 *p, float2 *q, int2 *idx){
     int j2 = idx[1].y;
     int i3 = idx[2].x;
     int j3 = idx[2].y;
-    float mean = (fabs(sin(d_angle(p,i1))-sin(d_angle(q,j1))) +
-        fabs(sin(d_angle(p,i2))-sin(d_angle(q,j2))) +
-        fabs(sin(d_angle(p,i3))-sin(d_angle(q,j3))))/3.0;
-    return exp(-mean/0.5);
+    float mean = (fabs(sinf(d_angle(p,i1))-sinf(d_angle(q,j1))) +
+        fabs(sinf(d_angle(p,i2))-sinf(d_angle(q,j2))) +
+        fabs(sinf(d_angle(p,i3))-sinf(d_angle(q,j3))))/3.0;
+    return expf(-mean/0.5);
 
 }
 
@@ -50,7 +50,7 @@ __device__ float d_opposite_side(float2 *p,int i){
     float2 a;
     a.x = p[(i+1)%3].x - p[(i+2)%3].x;
     a.y = p[(i+1)%3].y - p[(i+2)%3].y;
-    return sqrt(pow(a.x,2)+pow(a.y,2));
+    return sqrtf(powf(a.x,2)+powf(a.y,2));
 }
 
 __device__ float d_sim_ratios(float2 *p, float2 *q, int2 *idx){
@@ -65,9 +65,9 @@ __device__ float d_sim_ratios(float2 *p, float2 *q, int2 *idx){
     R2 = d_opposite_side(p,i2)/d_opposite_side(q,j2);
     R3 = d_opposite_side(p,i3)/d_opposite_side(q,j3);
     float mean = (R1 + R2 + R3)/3.0;
-    float standard = sqrt((pow((R1-mean),2)+(pow(R2-mean,2))
-            +(pow(R3-mean,2)))/3.0);
-    return exp(-standard/0.5);
+    float standard = sqrtf((powf((R1-mean),2)+(powf(R2-mean,2))
+            +(powf(R3-mean,2)))/3.0);
+    return expf(-standard/0.5);
 }
 
 __device__ float d_sim_desc(float *dp, float *dq, int2 *idx){
@@ -80,11 +80,11 @@ __device__ float d_sim_desc(float *dp, float *dq, int2 *idx){
     float a = dp[i1]-dq[j1];
     float b = dp[i2]-dq[j2];
     float c = dp[i3]-dq[j3];
-    a = sqrt(pow(a,2));
-    b = sqrt(pow(b,2));
-    c = sqrt(pow(c,2));
+    a = sqrtf(powf(a,2));
+    b = sqrtf(powf(b,2));
+    c = sqrtf(powf(c,2));
 
-    return exp(-(((a+b+c)/3.0))/0.5);
+    return expf(-(((a+b+c)/3.0))/0.5);
 
 }
 
@@ -260,7 +260,7 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
         float *desc1, float *desc2, int desc1Rows,
         int desc1Cols, int desc2Rows, int desc2Cols, float cang,
         float crat, float cdesc, float thresholding,
-        int edges1Size, int edges2Size, beforeMatches *before_matches){
+        int edges1Size, int edges2Size, beforeMatches *before_matches, float *tests){
 
     int i = blockIdx.x*blockDim.x + threadIdx.x;
     float2 *p,*q;
@@ -292,6 +292,7 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
             q[1].y = kp2[(edges2[j*3+1])*2+1];
             q[2].x = kp2[(edges2[j*3+2])*2+0];
             q[2].y = kp2[(edges2[j*3+2])*2+1];
+
             //////////////////////////////////
             //Descriptors
             for (int ii = 0; ii < desc1Cols; ii++) {
@@ -304,6 +305,8 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
                 desc_q[1*desc2Cols+ii] = desc2[(edges2[j*3+1])*desc2Cols+ii];
                 desc_q[2*desc2Cols+ii] = desc2[(edges2[j*3+2])*desc2Cols+ii];
             }
+
+            tests[i*edges2Size+j] = desc_q[2*desc2Cols+0];
 
             finalSimilarity = d_similarity(p,q,desc_p,desc_q,cang,crat,cdesc);
             if(finalSimilarity.sim > max_similarity){

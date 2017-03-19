@@ -308,9 +308,10 @@ int doMatch(Mat &img1, Mat &img2, float cang,
 //  gpu_matches = (int*)malloc(100*sizeof(int)*2);
   //gpuErrchk(cudaMalloc((void**)&d_matches,100*sizeof(int)*2));
 
-//  float *d_test, *test;
-//  test = (float*)malloc(Edges1.size()*Edges2.size()*sizeof(float));
-//  gpuErrchk(cudaMalloc((void**)&d_test,sizeof(float)*Edges1.size()*Edges2.size()));
+  float *d_tests, *tests;
+  tests = (float*)malloc(Edges1.size()*Edges2.size()*sizeof(float));
+  gpuErrchk(cudaMalloc((void**)&d_tests,sizeof(float)*Edges1.size()*Edges2.size()));
+
   beforeMatches *d_beMatches, *beMatches;
   beMatches = (beforeMatches*)malloc(Edges1.size()
           *sizeof(beforeMatches));
@@ -325,14 +326,16 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   d_hyperedges<<<dimGrid,dimBlock>>> (d_edges1Array, d_edges2Array, d_keyPoints1Array, d_keyPoints2Array,
         d_descriptor1Array, d_descriptor2Array, descriptor1.rows, descriptor1.cols,
         descriptor2.rows, descriptor2.cols, 10.0, 10.0, 3.0, 0.75,
-        Edges1.size(), Edges2.size(), d_beMatches);
+        Edges1.size(), Edges2.size(), d_beMatches, d_tests);
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());
   gpuErrchk(cudaMemcpy(beMatches, d_beMatches, Edges1.size()
               *sizeof(beforeMatches), cudaMemcpyDeviceToHost));
+  gpuErrchk(cudaMemcpy(tests, d_tests, Edges1.size()*Edges2.size()
+              *sizeof(float), cudaMemcpyDeviceToHost));
   cout << "sin test "<< beMatches[0].edge_match_indices[2].y<<endl;
 
-  FILE *fileTest;
+  FILE *fileTest,*fileTest2;
   fileTest = fopen("sim_anglesTest","w");
   fprintf(fileTest,"bestIndex_j,punto1_x,punto1_y,punto2_x,punto2_y,punto3_x,punto3_y,maxSimilarity,s_ang,s_rat,s_desc\n");
   for (int i = 0; i < Edges1.size(); i++) {
@@ -343,10 +346,19 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   }
   fclose(fileTest);
 
+  fileTest2 = fopen("tests","w");
+  for (int i = 0; i < Edges1.size(); i++) {
+      for (int j = 0; j < Edges2.size(); j++) {
+          fprintf(fileTest2,"%f ",tests[i*Edges2.size()+j]);
+      }
+      fprintf(fileTest2,"\n");
+  }
+  fclose(fileTest2);
+
   HyperEdgeMatches *hyperedge_matches;
   hyperedge_matches = (HyperEdgeMatches*)malloc(Edges1.size()
           *sizeof(HyperEdgeMatches));
-  int hyper_matches = build_hyperedge_matches(beMatches,0.7,Edges1.size(),hyperedge_matches);
+  int hyper_matches = build_hyperedge_matches(beMatches,0.75,Edges1.size(),hyperedge_matches);
   cout << "Número de Matches " << hyper_matches << endl;
 
 
@@ -379,7 +391,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   cudaFree(d_keyPoints1Array); cudaFree(d_keyPoints2Array);
   cudaFree(d_descriptor1Array); cudaFree(d_descriptor2Array);
   free(beMatches); cudaFree(d_beMatches);
-  free(hyperedge_matches);
+  free(hyperedge_matches);free(tests);cudaFree(d_tests);
   return 0;
 }
 

@@ -42,6 +42,8 @@ namespace match {
                     des_2[k] = desc2.row(edges2[j][k]);
                 }
 
+                fprintf(fileReal,"%f ", des_2[2].at<float>(0,0));
+
                 float sim_angles = sim::angles(e1_points, e2_points, sigma);
                 float sim_ratios = sim::ratios(e1_points, e2_points, sigma);
                 float sim_desc = sim::descriptors(des_1, des_2, sigma);
@@ -61,11 +63,10 @@ namespace match {
                 }
             }
 
-            fprintf(fileReal,"%d\n", best_match_idx);
             if (max_similarity >= thresholding) {
                 matches.push_back(make_pair(i, best_match_idx));
             }
-            //fprintf(fileReal,"\n");
+            fprintf(fileReal,"\n");
         }
 
         fclose(fileReal);
