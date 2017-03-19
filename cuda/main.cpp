@@ -289,8 +289,10 @@ int doMatch(Mat &img1, Mat &img2, float cang,
 //  test = (float*)malloc(Edges1.size()*Edges2.size()*sizeof(float));
 //  gpuErrchk(cudaMalloc((void**)&d_test,sizeof(float)*Edges1.size()*Edges2.size()));
   beforeMatches *d_beMatches, *beMatches;
-  beMatches = (beforeMatches*)malloc(Edges1.size()*sizeof(beforeMatches));
-  gpuErrchk(cudaMalloc((void**)&d_beMatches,Edges1.size()*sizeof(beforeMatches)));
+  beMatches = (beforeMatches*)malloc(Edges1.size()
+          *sizeof(beforeMatches));
+  gpuErrchk(cudaMalloc((void**)&d_beMatches,Edges1.size()
+              *sizeof(beforeMatches)));
 
 
   float sizeX = (float)Edges1.size();
@@ -303,13 +305,14 @@ int doMatch(Mat &img1, Mat &img2, float cang,
         Edges1.size(), Edges2.size(), d_beMatches);
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());
-  gpuErrchk(cudaMemcpy(beMatches, d_beMatches, Edges1.size()*sizeof(beforeMatches), cudaMemcpyDeviceToHost));
-  cout << "sin test "<< beMatches[0].edge_match_indices[0].x<<endl;
+  gpuErrchk(cudaMemcpy(beMatches, d_beMatches, Edges1.size()
+              *sizeof(beforeMatches), cudaMemcpyDeviceToHost));
+  cout << "sin test "<< beMatches[0].edge_match_indices[2].y<<endl;
 
   FILE *fileTest;
   fileTest = fopen("sim_anglesTest","w");
   for (int i = 0; i < Edges1.size(); i++) {
-    fprintf(fileTest,"%d \n", beMatches[i].edge_match_indices[0].x);
+      fprintf(fileTest,"%d %d %d %d \n", beMatches[i].edge_match_indices[0].x, beMatches[i].edge_match_indices[0].y,  beMatches[i].edge_match_indices[1].x,  beMatches[i].edge_match_indices[1].y);
   }
   fclose(fileTest);
 

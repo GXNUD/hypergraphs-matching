@@ -2,11 +2,12 @@
 #include <stdlib.h>
 
 #define SIGMA 0.5
+#define SIZE_PERMS 3
 
 typedef struct MatchSimilarity
 {
     float sim_a, sim_r, sim_d, sim;
-    int2 *permutation;
+    int2 permutation[3];
 }MatchS;
 
 typedef struct beforeMatches
@@ -90,7 +91,7 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
 
     int2 perms_0[3],perms_1[3],perms_2[3];
     int2 perms_3[3],perms_4[3],perms_5[3];
-    int2 *point_match;
+    int2 point_match[3];
     perms_0[0].x = 0;
     perms_0[0].y = 0;
     perms_0[1].x = 1;
@@ -101,37 +102,37 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     perms_1[0].x = 0;
     perms_1[0].y = 0;
     perms_1[1].x = 1;
-    perms_1[1].y = 1;
+    perms_1[1].y = 2;
     perms_1[2].x = 2;
-    perms_1[2].y = 2;
+    perms_1[2].y = 1;
 
     perms_2[0].x = 0;
-    perms_2[0].y = 0;
+    perms_2[0].y = 1;
     perms_2[1].x = 1;
-    perms_2[1].y = 1;
+    perms_2[1].y = 0;
     perms_2[2].x = 2;
     perms_2[2].y = 2;
 
     perms_3[0].x = 0;
-    perms_3[0].y = 0;
+    perms_3[0].y = 1;
     perms_3[1].x = 1;
-    perms_3[1].y = 1;
+    perms_3[1].y = 2;
     perms_3[2].x = 2;
-    perms_3[2].y = 2;
+    perms_3[2].y = 0;
 
     perms_4[0].x = 0;
-    perms_4[0].y = 0;
+    perms_4[0].y = 2;
     perms_4[1].x = 1;
-    perms_4[1].y = 1;
+    perms_4[1].y = 0;
     perms_4[2].x = 2;
-    perms_4[2].y = 2;
+    perms_4[2].y = 1;
 
     perms_5[0].x = 0;
-    perms_5[0].y = 0;
+    perms_5[0].y = 2;
     perms_5[1].x = 1;
     perms_5[1].y = 1;
     perms_5[2].x = 2;
-    perms_5[2].y = 2;
+    perms_5[2].y = 0;
 
     float s = cang + crat + cdesc;
     cang /= s;
@@ -145,7 +146,11 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_d = d_sim_desc(dp,dq,perms_0);
     _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
     if(_sim>sim){
-        point_match = perms_0;
+        #pragma unroll
+        for (int ll = 0; ll<SIZE_PERMS; ll++) {
+            point_match[ll].x = perms_0[ll].x;
+            point_match[ll].y = perms_0[ll].y;
+        }
         sim_a = _sim_a;
         sim_r = _sim_r;
         sim_d = _sim_d;
@@ -157,7 +162,11 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_d = d_sim_desc(dp,dq,perms_1);
     _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
     if(_sim>sim){
-        point_match = perms_1;
+        #pragma unroll
+        for (int ll = 0; ll<SIZE_PERMS; ll++) {
+            point_match[ll].x = perms_1[ll].x;
+            point_match[ll].y = perms_1[ll].y;
+        }
         sim_a = _sim_a;
         sim_r = _sim_r;
         sim_d = _sim_d;
@@ -169,7 +178,11 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_d = d_sim_desc(dp,dq,perms_2);
     _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
     if(_sim>sim){
-        point_match = perms_2;
+         #pragma unroll
+        for (int ll = 0; ll<SIZE_PERMS; ll++) {
+            point_match[ll].x = perms_2[ll].x;
+            point_match[ll].y = perms_2[ll].y;
+        }
         sim_a = _sim_a;
         sim_r = _sim_r;
         sim_d = _sim_d;
@@ -181,7 +194,11 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_d = d_sim_desc(dp,dq,perms_3);
     _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
     if(_sim>sim){
-        point_match = perms_3;
+        #pragma unroll
+        for (int ll = 0; ll<SIZE_PERMS; ll++) {
+            point_match[ll].x = perms_3[ll].x;
+            point_match[ll].y = perms_3[ll].y;
+        }
         sim_a = _sim_a;
         sim_r = _sim_r;
         sim_d = _sim_d;
@@ -193,7 +210,11 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_d = d_sim_desc(dp,dq,perms_4);
     _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
     if(_sim>sim){
-        point_match = perms_4;
+         #pragma unroll
+        for (int ll = 0; ll<SIZE_PERMS; ll++) {
+            point_match[ll].x = perms_4[ll].x;
+            point_match[ll].y = perms_4[ll].y;
+        }
         sim_a = _sim_a;
         sim_r = _sim_r;
         sim_d = _sim_d;
@@ -205,7 +226,11 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_d = d_sim_desc(dp,dq,perms_5);
     _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
     if(_sim>sim){
-        point_match = perms_5;
+        #pragma unroll
+        for (int ll = 0; ll<SIZE_PERMS; ll++) {
+            point_match[ll].x = perms_5[ll].x;
+            point_match[ll].y = perms_5[ll].y;
+        }
         sim_a = _sim_a;
         sim_r = _sim_r;
         sim_d = _sim_d;
@@ -218,7 +243,11 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     finalSimilarity.sim_r = sim_r;
     finalSimilarity.sim_d = sim_d;
     finalSimilarity.sim = sim;
-    finalSimilarity.permutation = point_match;
+    #pragma unroll
+    for (int ll = 0; ll<SIZE_PERMS; ll++) {
+        finalSimilarity.permutation[ll].x = point_match[ll].x;
+        finalSimilarity.permutation[ll].y = point_match[ll].y;
+    }
 
     return finalSimilarity;
 }
@@ -240,7 +269,8 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
     desc_p = (float*)malloc(desc1Cols*sizeof(float)*3);
     desc_q = (float*)malloc(desc2Cols*sizeof(float)*3);
 
-    float best_index, max_similarity, s_ang, s_ratios, s_desc;
+    float max_similarity, s_ang, s_ratios, s_desc;
+    int best_index;
     int2 edge_match_indices[3];
 
     if (i < edges1Size){
@@ -282,22 +312,18 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
                 for (int ii = 0; ii < 3 ; ii++) {
                     int p_i = finalSimilarity.permutation[ii].x;
                     int q_i = finalSimilarity.permutation[ii].y;
-                    edge_match_indices[ii].x = edges1[p_i*3+ii];
-                    edge_match_indices[ii].y = edges2[q_i*3+ii];
+                    edge_match_indices[ii].x = edges1[i*3+p_i];
+                    edge_match_indices[ii].y = edges2[j*3+q_i];
                 }
-            }
-            //matches[i*edges2Size+j] = (float)edge_match_indices[0].y;
+           }
         }
         before_matches[i].bestIndex_j = best_index;
         before_matches[i].edge_match_indices[0].x = edge_match_indices[0].x;
         before_matches[i].edge_match_indices[0].y = edge_match_indices[0].y;
-
         before_matches[i].edge_match_indices[1].x = edge_match_indices[1].x;
         before_matches[i].edge_match_indices[1].y = edge_match_indices[1].y;
-
         before_matches[i].edge_match_indices[2].x = edge_match_indices[2].x;
         before_matches[i].edge_match_indices[2].y = edge_match_indices[2].y;
-
     }
 
     free(p);free(q);free(desc_p);free(desc_q);
