@@ -140,7 +140,7 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     cang = cang/s;
     crat = crat/s;
     cdesc = cdesc/s;
-    float sim = -100000.0;
+    float sim = -1E30;
     float _sim_a, _sim_r, _sim_d, _sim, sim_a, sim_r, sim_d;
 
     _sim_a = d_sim_angles(p,q,perms_0);
@@ -276,7 +276,8 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
     int2 edge_match_indices[3];
     int j =0;
     if (i < edges1Size){
-        max_similarity = -100;
+        MatchSimilarity finalSimilarity;
+        max_similarity = -1E30;;
         for (j = 0; j < edges2Size; j++) {
             //keyPoints
             p[0].x = kp1[(edges1[i*3+0])*2+0];
@@ -304,7 +305,7 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
                 desc_q[2*desc2Cols+ii] = desc2[(edges2[j*3+2])*desc2Cols+ii];
             }
 
-            MatchSimilarity finalSimilarity = d_similarity(p,q,desc_p,desc_q,cang,crat,cdesc);
+            finalSimilarity = d_similarity(p,q,desc_p,desc_q,cang,crat,cdesc);
             if(finalSimilarity.sim > max_similarity){
                 best_index = j;
                 max_similarity = finalSimilarity.sim;

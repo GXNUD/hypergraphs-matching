@@ -324,7 +324,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   dim3 dimBlock(16,1/*16*/,1);
   d_hyperedges<<<dimGrid,dimBlock>>> (d_edges1Array, d_edges2Array, d_keyPoints1Array, d_keyPoints2Array,
         d_descriptor1Array, d_descriptor2Array, descriptor1.rows, descriptor1.cols,
-        descriptor2.rows, descriptor2.cols, 1.0, 1.0, 1.0, 0.75,
+        descriptor2.rows, descriptor2.cols, 10.0, 10.0, 3.0, 0.75,
         Edges1.size(), Edges2.size(), d_beMatches);
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());
@@ -334,12 +334,12 @@ int doMatch(Mat &img1, Mat &img2, float cang,
 
   FILE *fileTest;
   fileTest = fopen("sim_anglesTest","w");
-  fprintf(fileTest,"bestIndex_j,punto1_x,punto1_y,punto2_x,punto2_y,punto3_x,punto3_y,maxSimilarity\n");
+  fprintf(fileTest,"bestIndex_j,punto1_x,punto1_y,punto2_x,punto2_y,punto3_x,punto3_y,maxSimilarity,s_ang,s_rat,s_desc\n");
   for (int i = 0; i < Edges1.size(); i++) {
-      fprintf(fileTest,"%d,%d,%d,%d,%d,%d,%d,%0.3f\n", beMatches[i].bestIndex_j, beMatches[i].edge_match_indices[0].x,
+      fprintf(fileTest,"%d,%d,%d,%d,%d,%d,%d,%0.2f,%0.2f,%0.2f,%0.2f\n", beMatches[i].bestIndex_j, beMatches[i].edge_match_indices[0].x,
               beMatches[i].edge_match_indices[0].y,  beMatches[i].edge_match_indices[1].x,
               beMatches[i].edge_match_indices[1].y, beMatches[i].edge_match_indices[2].x, beMatches[i].edge_match_indices[2].y,
-              beMatches[i].max_similarity);
+              beMatches[i].max_similarity,beMatches[i].s_ang,beMatches[i].s_rat,beMatches[i].s_desc);
   }
   fclose(fileTest);
 
