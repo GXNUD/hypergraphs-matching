@@ -80,9 +80,9 @@ __device__ float d_sim_desc(float *dp, float *dq, int2 *idx){
     float c = dp[i3]-dq[j3];
     a = sqrt(pow(a,2));
     b = sqrt(pow(b,2));
-    c = sqrt(pow(b,2));
+    c = sqrt(pow(c,2));
 
-    return ((a+b+c)/3.0)/0.5;
+    return exp(-(((a+b+c)/3.0))/0.5);
 
 }
 
@@ -270,12 +270,12 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
     desc_q = (float*)malloc(desc2Cols*sizeof(float)*3);
 
     float max_similarity, s_ang, s_ratios, s_desc;
-    int best_index;
+    int best_index=-1;
     int2 edge_match_indices[3];
-
+    int j =0;
     if (i < edges1Size){
-        max_similarity = -1E30;
-        for (int j = 0; j < edges2Size; j++) {
+        max_similarity = -100;
+        for (j = 0; j < edges2Size; j++) {
             //keyPoints
             p[0].x = kp1[(edges1[i*3+0])*2+0];
             p[0].y = kp1[(edges1[i*3+0])*2+1];
@@ -315,8 +315,11 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
                     edge_match_indices[ii].x = edges1[i*3+p_i];
                     edge_match_indices[ii].y = edges2[j*3+q_i];
                 }
+
            }
+
         }
+
         before_matches[i].bestIndex_j = best_index;
         before_matches[i].edge_match_indices[0].x = edge_match_indices[0].x;
         before_matches[i].edge_match_indices[0].y = edge_match_indices[0].y;
