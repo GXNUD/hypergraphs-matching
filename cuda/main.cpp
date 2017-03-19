@@ -38,6 +38,13 @@ using namespace std;
 using namespace cv::gpu;
 
 
+typedef struct HyperEdgeMatches{
+    int i;
+    int j;
+    float max_similarity;
+    float s_ang,s_rat,s_desc;
+}HEM;
+
 /*
 ##     ## ######## #### ##        ######
 ##     ##    ##     ##  ##       ##    ##
@@ -178,6 +185,22 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
   return edges;
 }
 
+int build_hyperedge_matches(beforeMatches *beMatches,
+         float th_e,int edges1Size,HyperEdgeMatches *hyperedge_matches){
+    int countMatches=0;
+    for (int i = 0; i < edges1Size; i++) {
+        if(beMatches[i].max_similarity>=th_e){
+            countMatches++;
+            hyperedge_matches[i].i = i;
+            hyperedge_matches[i].j = beMatches[i].bestIndex_j;
+            hyperedge_matches[i].max_similarity = beMatches[i].max_similarity;
+            hyperedge_matches[i].s_ang = beMatches[i].s_ang;
+            hyperedge_matches[i].s_rat = beMatches[i].s_rat;
+            hyperedge_matches[i].s_desc = beMatches[i].s_desc;
+        }
+    }
+    return countMatches;
+}
 /*
 ##     ##    ###    #### ##    ##
 ###   ###   ## ##    ##  ###   ##
@@ -301,7 +324,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   dim3 dimBlock(16,1/*16*/,1);
   d_hyperedges<<<dimGrid,dimBlock>>> (d_edges1Array, d_edges2Array, d_keyPoints1Array, d_keyPoints2Array,
         d_descriptor1Array, d_descriptor2Array, descriptor1.rows, descriptor1.cols,
-        descriptor2.rows, descriptor2.cols, 10, 10, 3, 0.75,
+        descriptor2.rows, descriptor2.cols, 1.0, 1.0, 1.0, 0.75,
         Edges1.size(), Edges2.size(), d_beMatches);
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());
@@ -311,13 +334,21 @@ int doMatch(Mat &img1, Mat &img2, float cang,
 
   FILE *fileTest;
   fileTest = fopen("sim_anglesTest","w");
-  fprintf(fileTest,"bestIndex_j,punto1_x,punto1_y,punto2_x,punto2_y,punto3_x,punto3_y\n");
+  fprintf(fileTest,"bestIndex_j,punto1_x,punto1_y,punto2_x,punto2_y,punto3_x,punto3_y,maxSimilarity\n");
   for (int i = 0; i < Edges1.size(); i++) {
-      fprintf(fileTest,"%d,%d,%d,%d,%d,%d,%d\n", beMatches[i].bestIndex_j, beMatches[i].edge_match_indices[0].x,
+      fprintf(fileTest,"%d,%d,%d,%d,%d,%d,%d,%0.3f\n", beMatches[i].bestIndex_j, beMatches[i].edge_match_indices[0].x,
               beMatches[i].edge_match_indices[0].y,  beMatches[i].edge_match_indices[1].x,
-              beMatches[i].edge_match_indices[1].y, beMatches[i].edge_match_indices[2].x, beMatches[i].edge_match_indices[2].y);
+              beMatches[i].edge_match_indices[1].y, beMatches[i].edge_match_indices[2].x, beMatches[i].edge_match_indices[2].y,
+              beMatches[i].max_similarity);
   }
   fclose(fileTest);
+
+  HyperEdgeMatches *hyperedge_matches;
+  hyperedge_matches = (HyperEdgeMatches*)malloc(Edges1.size()
+          *sizeof(HyperEdgeMatches));
+  int hyper_matches = build_hyperedge_matches(beMatches,0.7,Edges1.size(),hyperedge_matches);
+  cout << "Número de Matches " << hyper_matches << endl;
+
 
   cout << Edges1.size() << " Edges from image 1" << endl;
   cout << Edges2.size() << " Edges from image 2" << endl;
@@ -327,8 +358,8 @@ int doMatch(Mat &img1, Mat &img2, float cang,
                                                            kpts1,
                                                            kpts2,
                                                            descriptor1,
-                                                           descriptor2, 10, 10,
-                                                           3, 0.75);
+                                                           descriptor2, 1.0, 1.0,
+                                                           1.0, 0.75);
 
   cout << endl << "Edges Matching done. ";
   cout << edge_matches.size() << " edge matches passed!" << endl;
@@ -348,6 +379,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   cudaFree(d_keyPoints1Array); cudaFree(d_keyPoints2Array);
   cudaFree(d_descriptor1Array); cudaFree(d_descriptor2Array);
   free(beMatches); cudaFree(d_beMatches);
+  free(hyperedge_matches);
   return 0;
 }
 

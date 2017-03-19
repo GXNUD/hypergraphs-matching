@@ -14,6 +14,7 @@ typedef struct beforeMatches
 {
     int bestIndex_j;
     int2 edge_match_indices[3];
+    float s_ang, s_rat, s_desc, max_similarity;
 
 }bMatchS;
 
@@ -28,7 +29,7 @@ __device__ float d_angle(float2 *p, int i){
     float dot = a.x*b.x+a.y*b.y;
     float angle = acos(dot/sqrt((a.x*a.x)+(a.y*a.y))
             /sqrt((b.x*b.x)+(b.y*b.y)));
-    return sin(angle);
+    return angle;
 }
 
 __device__ float d_sim_angles(float2 *p, float2 *q, int2 *idx){
@@ -38,9 +39,9 @@ __device__ float d_sim_angles(float2 *p, float2 *q, int2 *idx){
     int j2 = idx[1].y;
     int i3 = idx[2].x;
     int j3 = idx[2].y;
-    float mean = ((sin(d_angle(p,i1))-sin(d_angle(q,j1))) +
-        (sin(d_angle(p,i2))-sin(d_angle(q,j2))) +
-        (sin(d_angle(p,i3))-sin(d_angle(q,j3))))/3.0;
+    float mean = (fabs(sin(d_angle(p,i1))-sin(d_angle(q,j1))) +
+        fabs(sin(d_angle(p,i2))-sin(d_angle(q,j2))) +
+        fabs(sin(d_angle(p,i3))-sin(d_angle(q,j3))))/3.0;
     return exp(-mean/0.5);
 
 }
@@ -136,10 +137,10 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     perms_5[2].y = 0;
 
     float s = cang + crat + cdesc;
-    cang /= s;
-    crat /= s;
-    cdesc /= s;
-    float sim = -1E30;
+    cang = cang/s;
+    crat = crat/s;
+    cdesc = cdesc/s;
+    float sim = -100000.0;
     float _sim_a, _sim_r, _sim_d, _sim, sim_a, sim_r, sim_d;
 
     _sim_a = d_sim_angles(p,q,perms_0);
@@ -161,7 +162,7 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_a = d_sim_angles(p,q,perms_1);
     _sim_r = d_sim_ratios(p,q,perms_1);
     _sim_d = d_sim_desc(dp,dq,perms_1);
-    _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
     if(_sim>sim){
         #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
@@ -177,7 +178,7 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_a = d_sim_angles(p,q,perms_2);
     _sim_r = d_sim_ratios(p,q,perms_2);
     _sim_d = d_sim_desc(dp,dq,perms_2);
-    _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
     if(_sim>sim){
          #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
@@ -193,7 +194,7 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_a = d_sim_angles(p,q,perms_3);
     _sim_r = d_sim_ratios(p,q,perms_3);
     _sim_d = d_sim_desc(dp,dq,perms_3);
-    _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
     if(_sim>sim){
         #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
@@ -209,7 +210,7 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_a = d_sim_angles(p,q,perms_4);
     _sim_r = d_sim_ratios(p,q,perms_4);
     _sim_d = d_sim_desc(dp,dq,perms_4);
-    _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
     if(_sim>sim){
          #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
@@ -225,7 +226,7 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     _sim_a = d_sim_angles(p,q,perms_5);
     _sim_r = d_sim_ratios(p,q,perms_5);
     _sim_d = d_sim_desc(dp,dq,perms_5);
-    _sim = cang * sim_a + crat * sim_r + cdesc * sim_d;
+    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
     if(_sim>sim){
         #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
@@ -258,7 +259,7 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
         float *kp1, float *kp2,
         float *desc1, float *desc2, int desc1Rows,
         int desc1Cols, int desc2Rows, int desc2Cols, float cang,
-        float crat, double cdesc, double thresholding,
+        float crat, float cdesc, float thresholding,
         int edges1Size, int edges2Size, beforeMatches *before_matches){
 
     int i = blockIdx.x*blockDim.x + threadIdx.x;
@@ -322,6 +323,10 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
         }
 
         before_matches[i].bestIndex_j = best_index;
+        before_matches[i].max_similarity = max_similarity;
+        before_matches[i].s_ang = s_ang;
+        before_matches[i].s_rat = s_ratios;
+        before_matches[i].s_desc = s_desc;
         before_matches[i].edge_match_indices[0].x = edge_match_indices[0].x;
         before_matches[i].edge_match_indices[0].y = edge_match_indices[0].y;
         before_matches[i].edge_match_indices[1].x = edge_match_indices[1].x;
