@@ -9,6 +9,12 @@ typedef struct MatchSimilarity
     int2 *permutation;
 }MatchS;
 
+typedef struct beforeMatches
+{
+    int bestIndex_j;
+    int2 edge_match_indices[3];
+
+}bMatchS;
 
 __device__ float d_angle(float2 *p, int i){
     float2 a;
@@ -223,7 +229,7 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
         float *desc1, float *desc2, int desc1Rows,
         int desc1Cols, int desc2Rows, int desc2Cols, float cang,
         float crat, double cdesc, double thresholding,
-        int edges1Size, int edges2Size, float *matches){
+        int edges1Size, int edges2Size, beforeMatches *before_matches){
 
     int i = blockIdx.x*blockDim.x + threadIdx.x;
     float2 *p,*q;
@@ -280,8 +286,18 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
                     edge_match_indices[ii].y = edges2[q_i*3+ii];
                 }
             }
-            matches[i*edges2Size+j] = (float)edge_match_indices[0].y;
+            //matches[i*edges2Size+j] = (float)edge_match_indices[0].y;
         }
+        before_matches[i].bestIndex_j = best_index;
+        before_matches[i].edge_match_indices[0].x = edge_match_indices[0].x;
+        before_matches[i].edge_match_indices[0].y = edge_match_indices[0].y;
+
+        before_matches[i].edge_match_indices[1].x = edge_match_indices[1].x;
+        before_matches[i].edge_match_indices[1].y = edge_match_indices[1].y;
+
+        before_matches[i].edge_match_indices[2].x = edge_match_indices[2].x;
+        before_matches[i].edge_match_indices[2].y = edge_match_indices[2].y;
+
     }
 
     free(p);free(q);free(desc_p);free(desc_q);

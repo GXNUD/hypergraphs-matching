@@ -38,7 +38,6 @@ using namespace std;
 using namespace cv::gpu;
 
 
-
 /*
 ##     ## ######## #### ##        ######
 ##     ##    ##     ##  ##       ##    ##
@@ -286,9 +285,13 @@ int doMatch(Mat &img1, Mat &img2, float cang,
 //  gpu_matches = (int*)malloc(100*sizeof(int)*2);
   //gpuErrchk(cudaMalloc((void**)&d_matches,100*sizeof(int)*2));
 
-  float *d_test, *test;
-  test = (float*)malloc(Edges1.size()*Edges2.size()*sizeof(float));
-  gpuErrchk(cudaMalloc((void**)&d_test,sizeof(float)*Edges1.size()*Edges2.size()));
+//  float *d_test, *test;
+//  test = (float*)malloc(Edges1.size()*Edges2.size()*sizeof(float));
+//  gpuErrchk(cudaMalloc((void**)&d_test,sizeof(float)*Edges1.size()*Edges2.size()));
+  beforeMatches *d_beMatches, *beMatches;
+  beMatches = (beforeMatches*)malloc(Edges1.size()*sizeof(beforeMatches));
+  gpuErrchk(cudaMalloc((void**)&d_beMatches,Edges1.size()*sizeof(beforeMatches)));
+
 
   float sizeX = (float)Edges1.size();
   //float sizeY = (float)Edges1.size();
@@ -297,19 +300,16 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   d_hyperedges<<<dimGrid,dimBlock>>> (d_edges1Array, d_edges2Array, d_keyPoints1Array, d_keyPoints2Array,
         d_descriptor1Array, d_descriptor2Array, descriptor1.rows, descriptor1.cols,
         descriptor2.rows, descriptor2.cols, 10, 10, 3, 0.75,
-        Edges1.size(), Edges2.size(), d_test);
+        Edges1.size(), Edges2.size(), d_beMatches);
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());
-  cudaMemcpy(test, d_test, Edges1.size()*sizeof(float)*Edges2.size(), cudaMemcpyDeviceToHost);
-  cout << "sin test "<< test[1*Edges2.size()+50]<<endl;
+  gpuErrchk(cudaMemcpy(beMatches, d_beMatches, Edges1.size()*sizeof(beforeMatches), cudaMemcpyDeviceToHost));
+  cout << "sin test "<< beMatches[0].edge_match_indices[0].x<<endl;
 
   FILE *fileTest;
   fileTest = fopen("sim_anglesTest","w");
   for (int i = 0; i < Edges1.size(); i++) {
-      for (int j = 0; j < Edges2.size(); j++) {
-          fprintf(fileTest,"%0.1f ", test[i*Edges2.size()+j]);
-      }
-      fprintf(fileTest,"\n");
+    fprintf(fileTest,"%d \n", beMatches[i].edge_match_indices[0].x);
   }
   fclose(fileTest);
 
@@ -341,7 +341,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   cudaFree(d_edges1Array); cudaFree(d_edges2Array);
   cudaFree(d_keyPoints1Array); cudaFree(d_keyPoints2Array);
   cudaFree(d_descriptor1Array); cudaFree(d_descriptor2Array);
-  free(test); cudaFree(d_test);
+  free(beMatches); cudaFree(d_beMatches);
   return 0;
 }
 
