@@ -43,7 +43,6 @@ __device__ float d_sim_angles(float2 *p, float2 *q, int2 *idx){
         fabs(sinf(d_angle(p,i2))-sinf(d_angle(q,j2))) +
         fabs(sinf(d_angle(p,i3))-sinf(d_angle(q,j3))))/3.0;
 
-    printf("hilo %d, -mean/0.5 %f \n", blockIdx.x*blockDim.x+threadIdx.x,expf(-mean/0.5));
     return expf(-mean/0.5);
 
 }
@@ -91,7 +90,7 @@ __device__ float d_sim_desc(float *dp, float *dq, int2 *idx){
 }
 
 __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *dq,
-        float cang, float crat, float cdesc){
+        float cang, float crat, float cdesc, float *t_ang, float *t_rat, float *t_desc, float *t_sim){
 
     int2 perms_0[3],perms_1[3],perms_2[3];
     int2 perms_3[3],perms_4[3],perms_5[3];
@@ -143,106 +142,107 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
     crat = crat/s;
     cdesc = cdesc/s;
     float sim = -1E30;
-    float _sim_a, _sim_r, _sim_d, _sim, sim_a, sim_r, sim_d;
+    float d_sim_a, d_sim_r, d_sim_d, d_sim, sim_a, sim_r, sim_d;
 
-    _sim_a = d_sim_angles(p,q,perms_0);
-    _sim_r = d_sim_ratios(p,q,perms_0);
-    _sim_d = d_sim_desc(dp,dq,perms_0);
-    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
-    if(_sim>sim){
+    d_sim_a = d_sim_angles(p,q,perms_0);
+    d_sim_r = d_sim_ratios(p,q,perms_0);
+    d_sim_d = d_sim_desc(dp,dq,perms_0);
+    d_sim = cang * d_sim_a + crat * d_sim_r + cdesc * d_sim_d;
+    if(d_sim>sim){
         #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
             point_match[ll].x = perms_0[ll].x;
             point_match[ll].y = perms_0[ll].y;
         }
-        sim_a = _sim_a;
-        sim_r = _sim_r;
-        sim_d = _sim_d;
-        sim = _sim;
+        sim_a = d_sim_a;
+        sim_r = d_sim_r;
+        sim_d = d_sim_d;
+        sim = d_sim;
     }
 
-    _sim_a = d_sim_angles(p,q,perms_1);
-    _sim_r = d_sim_ratios(p,q,perms_1);
-    _sim_d = d_sim_desc(dp,dq,perms_1);
-    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
-    if(_sim>sim){
+    d_sim_a = d_sim_angles(p,q,perms_1);
+    d_sim_r = d_sim_ratios(p,q,perms_1);
+    d_sim_d = d_sim_desc(dp,dq,perms_1);
+    d_sim = cang * d_sim_a + crat * d_sim_r + cdesc * d_sim_d;
+    if(d_sim>sim){
         #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
             point_match[ll].x = perms_1[ll].x;
             point_match[ll].y = perms_1[ll].y;
         }
-        sim_a = _sim_a;
-        sim_r = _sim_r;
-        sim_d = _sim_d;
-        sim = _sim;
+        sim_a = d_sim_a;
+        sim_r = d_sim_r;
+        sim_d = d_sim_d;
+        sim = d_sim;
     }
 
-    _sim_a = d_sim_angles(p,q,perms_2);
-    _sim_r = d_sim_ratios(p,q,perms_2);
-    _sim_d = d_sim_desc(dp,dq,perms_2);
-    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
-    if(_sim>sim){
+    d_sim_a = d_sim_angles(p,q,perms_2);
+    d_sim_r = d_sim_ratios(p,q,perms_2);
+    d_sim_d = d_sim_desc(dp,dq,perms_2);
+    d_sim = cang * d_sim_a + crat * d_sim_r + cdesc * d_sim_d;
+    if(d_sim>sim){
          #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
             point_match[ll].x = perms_2[ll].x;
             point_match[ll].y = perms_2[ll].y;
         }
-        sim_a = _sim_a;
-        sim_r = _sim_r;
-        sim_d = _sim_d;
-        sim = _sim;
+        sim_a = d_sim_a;
+        sim_r = d_sim_r;
+        sim_d = d_sim_d;
+        sim = d_sim;
    }
 
-    _sim_a = d_sim_angles(p,q,perms_3);
-    _sim_r = d_sim_ratios(p,q,perms_3);
-    _sim_d = d_sim_desc(dp,dq,perms_3);
-    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
-    if(_sim>sim){
+    d_sim_a = d_sim_angles(p,q,perms_3);
+    d_sim_r = d_sim_ratios(p,q,perms_3);
+    d_sim_d = d_sim_desc(dp,dq,perms_3);
+    d_sim = cang * d_sim_a + crat * d_sim_r + cdesc * d_sim_d;
+    if(d_sim>sim){
         #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
             point_match[ll].x = perms_3[ll].x;
             point_match[ll].y = perms_3[ll].y;
         }
-        sim_a = _sim_a;
-        sim_r = _sim_r;
-        sim_d = _sim_d;
-        sim = _sim;
+        sim_a = d_sim_a;
+        sim_r = d_sim_r;
+        sim_d = d_sim_d;
+        sim = d_sim;
     }
 
-    _sim_a = d_sim_angles(p,q,perms_4);
-    _sim_r = d_sim_ratios(p,q,perms_4);
-    _sim_d = d_sim_desc(dp,dq,perms_4);
-    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
-    if(_sim>sim){
+    d_sim_a = d_sim_angles(p,q,perms_4);
+    d_sim_r = d_sim_ratios(p,q,perms_4);
+    d_sim_d = d_sim_desc(dp,dq,perms_4);
+    d_sim = cang * d_sim_a + crat * d_sim_r + cdesc * d_sim_d;
+    if(d_sim>sim){
          #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
             point_match[ll].x = perms_4[ll].x;
             point_match[ll].y = perms_4[ll].y;
         }
-        sim_a = _sim_a;
-        sim_r = _sim_r;
-        sim_d = _sim_d;
-        sim = _sim;
+        sim_a = d_sim_a;
+        sim_r = d_sim_r;
+        sim_d = d_sim_d;
+        sim = d_sim;
    }
 
-    _sim_a = d_sim_angles(p,q,perms_5);
-    _sim_r = d_sim_ratios(p,q,perms_5);
-    _sim_d = d_sim_desc(dp,dq,perms_5);
-    _sim = cang * _sim_a + crat * _sim_r + cdesc * _sim_d;
-    if(_sim>sim){
+    d_sim_a = d_sim_angles(p,q,perms_5);
+    d_sim_r = d_sim_ratios(p,q,perms_5);
+    d_sim_d = d_sim_desc(dp,dq,perms_5);
+    d_sim = cang * d_sim_a + crat * d_sim_r + cdesc * d_sim_d;
+    if(d_sim>sim){
         #pragma unroll
         for (int ll = 0; ll<SIZE_PERMS; ll++) {
             point_match[ll].x = perms_5[ll].x;
             point_match[ll].y = perms_5[ll].y;
         }
-        sim_a = _sim_a;
-        sim_r = _sim_r;
-        sim_d = _sim_d;
-        sim = _sim;
+        sim_a = d_sim_a;
+        sim_r = d_sim_r;
+        sim_d = d_sim_d;
+        sim = d_sim;
   }
 
-    MatchSimilarity finalSimilarity;
 
+    //printf("hilo %d, sim_a %f \n", blockIdx.x*blockDim.x+threadIdx.x,sim_a);
+    MatchSimilarity finalSimilarity;
     finalSimilarity.sim_a = sim_a;
     finalSimilarity.sim_r = sim_r;
     finalSimilarity.sim_d = sim_d;
@@ -252,7 +252,10 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
         finalSimilarity.permutation[ll].x = point_match[ll].x;
         finalSimilarity.permutation[ll].y = point_match[ll].y;
     }
-
+    *t_ang = sim_a;
+    *t_rat = sim_r;
+    *t_desc = sim_d;
+    *t_sim = sim;
     return finalSimilarity;
 }
 
@@ -277,8 +280,10 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
     int best_index=-1;
     int2 edge_match_indices[3];
     int j =0;
-    if (i < edges1Size){
-        MatchSimilarity finalSimilarity;
+
+    MatchSimilarity finalSimilarity;
+    float t_ang,t_rat,t_desc,t_sim;
+    if(i < edges1Size){
         max_similarity = -1E30;;
         for (j = 0; j < edges2Size; j++) {
             //keyPoints
@@ -310,13 +315,15 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
 
             tests[i*edges2Size+j] = desc_q[2*desc2Cols+0];
 
-            finalSimilarity = d_similarity(p,q,desc_p,desc_q,cang,crat,cdesc);
-            if(finalSimilarity.sim > max_similarity){
+            finalSimilarity = d_similarity(p,q,desc_p,desc_q,
+                    cang,crat,cdesc,&t_ang,&t_rat,&t_desc,
+                    &t_sim);
+            if(t_sim > max_similarity){
                 best_index = j;
-                max_similarity = finalSimilarity.sim;
-                s_ang = finalSimilarity.sim_a;
-                s_ratios = finalSimilarity.sim_r;
-                s_desc = finalSimilarity.sim_d;
+                max_similarity = t_sim;
+                s_ang = t_ang;
+                s_ratios = t_rat;
+                s_desc = t_desc;
                 for (int ii = 0; ii < 3 ; ii++) {
                     int p_i = finalSimilarity.permutation[ii].x;
                     int q_i = finalSimilarity.permutation[ii].y;
@@ -327,6 +334,8 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
            }
 
         }
+
+        printf("Hilo %d angle %f\n",i,s_ang);
 
         before_matches[i].bestIndex_j = best_index;
         before_matches[i].max_similarity = max_similarity;

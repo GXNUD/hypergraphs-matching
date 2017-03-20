@@ -322,7 +322,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   float sizeX = (float)Edges1.size();
   //float sizeY = (float)Edges1.size();
   dim3 dimGrid(ceil(sizeX/16.0),1/*ceil(sizeY/16.0)*/,1);
-  dim3 dimBlock(16,1/*16*/,1);
+  dim3 dimBlock(16,1,1);
   d_hyperedges<<<dimGrid,dimBlock>>> (d_edges1Array, d_edges2Array, d_keyPoints1Array, d_keyPoints2Array,
         d_descriptor1Array, d_descriptor2Array, descriptor1.rows, descriptor1.cols,
         descriptor2.rows, descriptor2.cols, 10.0, 10.0, 3.0, 0.75,
