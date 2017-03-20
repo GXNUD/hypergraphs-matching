@@ -42,6 +42,8 @@ __device__ float d_sim_angles(float2 *p, float2 *q, int2 *idx){
     float mean = (fabs(sinf(d_angle(p,i1))-sinf(d_angle(q,j1))) +
         fabs(sinf(d_angle(p,i2))-sinf(d_angle(q,j2))) +
         fabs(sinf(d_angle(p,i3))-sinf(d_angle(q,j3))))/3.0;
+
+    printf("hilo %d, -mean/0.5 %f \n", blockIdx.x*blockDim.x+threadIdx.x,expf(-mean/0.5));
     return expf(-mean/0.5);
 
 }
