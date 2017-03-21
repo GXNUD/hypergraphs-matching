@@ -107,6 +107,7 @@ namespace sim {
     cdesc /= s;
 
     MatchSimilarity final_similarity;
+    final_similarity.global_sim = -1;
     for (int i = 0; i < PERMS.size(); i++) {
       vector<perm_t> cur_perm = PERMS[i];
       float _angles_sim = angles(p, q, cur_perm);
