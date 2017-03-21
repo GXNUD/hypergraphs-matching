@@ -23,7 +23,7 @@ namespace match {
     vector<vector<int> > &edges1, vector<vector<int> > &edges2,
     vector<KeyPoint> &kpts1, vector<KeyPoint> &kpts2,
     Mat &desc1, Mat &desc2, float cang, float cratm, float cdesc,
-    int th_edges, int th_points
+    float th_edges, float th_points
   ) {
     vector<hyperedgeMatch> hyperedge_matches;
     vector<DMatch> point_matches;
@@ -59,8 +59,8 @@ namespace match {
           s_ratios = sim_r;
           s_desc = sim_d;
           for (int l = 0; l < match_indices.size(); l++) {
-            int p_i = match_indices[l].first;
-            int q_i = match_indices[l].second;
+            int p_i = edges1[i][match_indices[l].first];
+            int q_i = edges2[j][match_indices[l].second];
             match_kpts_indices[l] = make_pair(p_i, q_i);
           }
         }
@@ -81,7 +81,7 @@ namespace match {
           int idx2_m = match_kpts_indices[m].second;
           float dist = norm(desc1.row(idx1_m) - desc2.row(idx2_m));
           float points_sim = exp(-dist / SIGMA);
-          if (!selected_point_matches.count(match_kpts_indices[m]) &&
+          if (selected_point_matches.count(match_kpts_indices[m]) == 0 &&
               points_sim >= th_points) {
             point_matches.push_back(DMatch(idx1_m, idx2_m, dist));
             selected_point_matches.insert(match_kpts_indices[m]);
