@@ -1,0 +1,21 @@
+
+Surf execution time: 0.71266s
+
+487 Keypoints Detected in image 1 
+
+335 Keypoints Detected in image 2 
+
+Triangulating ...
+tamano kpts1 : 487
+tamano descriptors : [64 x 487] [64 x 335]
+sin test 143
+Número de Matches 489
+952 Edges from image 1
+650 Edges from image 2
+
+Matching ...
+sin real: 0.0109561
+
+Edges Matching done. 10 edge matches passed!
+
+Point Matching Done. 26 Point matches passed!
