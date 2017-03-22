@@ -283,7 +283,6 @@ void d_hyperedges (int *edges1, int *edges2,
     float *desc_p, *desc_q;
     p = (float2*) malloc(3*sizeof(float2));
     q = (float2*) malloc(3*sizeof(float2));
-
     desc_p = (float*)malloc(desc1Cols*sizeof(float)*3);
     desc_q = (float*)malloc(desc2Cols*sizeof(float)*3);
 

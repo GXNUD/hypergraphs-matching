@@ -29,11 +29,10 @@ using namespace cv::gpu;
 
 
 typedef struct HyperEdgeMatches{
-    int i;
-    int j;
-    float max_similarity;
-    float s_ang,s_rat,s_desc;
-    int2 edge_match_indices[3];
+    int p_idx;
+    int q_idx;
+    float total_sim;
+    float angles_sim,ratios_sim,desc_sim;
 }HEM;
 
 /*
@@ -182,52 +181,43 @@ int init_beMatches(beforeMatches *beMatches, int edgesSize){
 }
 
 
-int build_hyperedge_matches(beforeMatches *beMatches,
-         float th_e,int edges1Size,HyperEdgeMatches *hyperedge_matches){
-    int countMatches=0;
-    for (int i = 0; i < edges1Size; i++) {
-        if(beMatches[i].max_similarity>=th_e){
-            hyperedge_matches[countMatches].i = i;
-            hyperedge_matches[countMatches].j = beMatches[i].bestIndex_j;
-            hyperedge_matches[countMatches].max_similarity = beMatches[i].max_similarity;
-            hyperedge_matches[countMatches].s_ang = beMatches[i].s_ang;
-            hyperedge_matches[countMatches].s_rat = beMatches[i].s_rat;
-            hyperedge_matches[countMatches].s_desc = beMatches[i].s_desc;
-            hyperedge_matches[countMatches].edge_match_indices[0].x = beMatches[i].edge_match_indices[0].x;
-            hyperedge_matches[countMatches].edge_match_indices[0].y = beMatches[i].edge_match_indices[0].y;
-            hyperedge_matches[countMatches].edge_match_indices[1].x = beMatches[i].edge_match_indices[1].x;
-            hyperedge_matches[countMatches].edge_match_indices[1].y = beMatches[i].edge_match_indices[1].y;
-            hyperedge_matches[countMatches].edge_match_indices[2].x = beMatches[i].edge_match_indices[2].x;
-            hyperedge_matches[countMatches].edge_match_indices[2].y = beMatches[i].edge_match_indices[2].y;
-            countMatches++;
-        }
-    }
-    return countMatches;
-}
-
-vector<DMatch> build_point_matches(int countMatches, float th_p, HyperEdgeMatches *hyperedge_matches,
-        float *desc1, float *desc2){
-    float a = 0.0;
-    float sim;
-    int count_match_points;
+pair<vector<HyperEdgeMatches>, vector<DMatch>> build_hyperedge_matches(beforeMatches
+        *beMatches, float th_e,int edges1Size, float th_points, float *desc1,float *desc2){
+    vector<HyperEdgeMatches> hyperedge_matches;
     vector<DMatch> point_matches;
-    for (int i = 0; i < countMatches; i++) {
-        a = 0.0;
-        for (int j = 0; j < 64; j++) {
-            int l = hyperedge_matches[i].edge_match_indices[ii].x;
-            int m = hyperedge_matches[i].edge_match_indices[ii].y;
-
-            for (int ii = 0; ii < 3; ii++) {
-                a = a + powf(desc1[l*64+j] - desc2[m*64+j],2);
+    set<pair<int,int>> selected_point_matches;
+    for (int i = 0; i < edges1Size; i++) {
+        float descsub = 0.0;
+        if(beMatches[i].max_similarity>=th_e){
+            HyperEdgeMatches cur_match;
+            cur_match.p_idx = i;
+            cur_match.q_idx = beMatches[i].bestIndex_j;
+            cur_match.total_sim = beMatches[i].max_similarity;
+            cur_match.angles_sim = beMatches[i].s_ang;
+            cur_match.ratios_sim = beMatches[i].s_rat;
+            cur_match.desc_sim = beMatches[i].s_desc;
+            hyperedge_matches.push_back(cur_match);
+            for (int l = 0; l < 3 ; l++) {
+                int idx1_m = beMatches[i].edge_match_indices[l].x;
+                int idx2_m = beMatches[i].edge_match_indices[l].y;
+                for (int ll = 0; ll < 64; ll++) {
+                    descsub = descsub + powf((desc1[idx1_m*64+ll] - desc2[idx2_m*64+ll]),2);
+                }
+                float dist = sqrtf(descsub);
+                float points_sim = expf(-dist/0.5);
+                if(selected_point_matches.count(make_pair(idx1_m,idx2_m)) == 0 &&
+                        points_sim >= th_points){
+                    point_matches.push_back(DMatch(idx1_m,idx2_m,dist));
+                    selected_point_matches.insert(make_pair(idx1_m,idx2_m));
+                }
             }
         }
-
-        a = sqrt(a);
-        sim = expf(-a/0.5);
-        if (sim >=th_p)
-            point_matches.push_back();
     }
+    pair<vector<HyperEdgeMatches>, vector<DMatch>> edge_and_points_matches;
+    edge_and_points_matches = make_pair(hyperedge_matches, point_matches);
+    return edge_and_points_matches;
 }
+
 /*
 ##     ##    ###    #### ##    ##
 ###   ###   ## ##    ##  ###   ##
@@ -347,32 +337,16 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   HyperEdgeMatches *hyperedge_matches;
   hyperedge_matches = (HyperEdgeMatches*)malloc(Edges1.size()
           *sizeof(HyperEdgeMatches));
-  int hyper_matches = build_hyperedge_matches(beMatches,0.7,Edges1.size(),hyperedge_matches);
-  cout << "Número de Matches " << hyper_matches << endl;
+  pair<vector<HyperEdgeMatches>, vector<DMatch>> edge_and_points_matches;
+  edge_and_points_matches = build_hyperedge_matches(beMatches,0.7,Edges1.size(),0.7,descriptor1Array, descriptor2Array);
 
+  vector<HyperEdgeMatches> edgetestmatches = edge_and_points_matches.first;
+  vector<DMatch> point_matches = edge_and_points_matches.second;
 
-  cout << Edges1.size() << " Edges from image 1" << endl;
-  cout << Edges2.size() << " Edges from image 2" << endl;
-  cout << endl << "Matching ..." << endl;
-
-  vector<pair<int, int> > edge_matches = match::hyperedges(Edges1, Edges2,
-                                                           kpts1,
-                                                           kpts2,
-                                                           descriptor1,
-                                                           descriptor2, 1.0, 1.0,
-                                                           1.0, 0.75);
-
-  cout << endl << "Edges Matching done. ";
-  cout << edge_matches.size() << " edge matches passed!" << endl;
-
-  vector<DMatch> matches = match::points(edge_matches, descriptor1, descriptor2,
-                                         Edges1, Edges2, 0.1);
-
-  cout << endl << "Point Matching Done. ";
-  cout << matches.size() << " Point matches passed!" << endl;
+  cout << "Número de Matches " << point_matches.size() << endl;
 
   // Draw Point matching
-  //draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
+  draw::pointsMatch(img1, kpts1, img2, kpts2, point_matches);
 
   free(edges1Array); free(keyPoints1Array); free(keyPoints2Array);
   free(descriptor1Array); free(descriptor2Array);
