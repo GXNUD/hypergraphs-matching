@@ -174,6 +174,7 @@ vector<vector<int> > delaunayTriangulation(Mat img, vector<KeyPoint> kpts) {
 
   return edges;
 }
+
 int init_beMatches(beforeMatches *beMatches, int edgesSize){
     for (int i = 0; i < edgesSize; i++) {
         beMatches[i].max_similarity = 0.0;
@@ -310,7 +311,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
 
  d_hyperedges(edges1Array, edges2Array,keyPoints1Array, keyPoints2Array,
         descriptor1Array, descriptor2Array, descriptor1.rows, descriptor1.cols,
-        descriptor2.rows, descriptor2.cols, cang, crat, cdesc, 0.7,
+        descriptor2.rows, descriptor2.cols, cang, crat, cdesc, 0.75,
         Edges1.size(), Edges2.size(), beMatches, tests);
   cout << "sin test "<< beMatches[0].edge_match_indices[2].y<<endl;
 
@@ -346,7 +347,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   cout << "Número de Matches " << point_matches.size() << endl;
 
   // Draw Point matching
-  draw::pointsMatch(img1, kpts1, img2, kpts2, point_matches);
+  //draw::pointsMatch(img1, kpts1, img2, kpts2, point_matches);
 
   free(edges1Array); free(keyPoints1Array); free(keyPoints2Array);
   free(descriptor1Array); free(descriptor2Array);

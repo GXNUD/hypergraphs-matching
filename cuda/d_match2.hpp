@@ -25,7 +25,6 @@ __device__ float d_angle(float2 *p, int i){
     a.y = p[i].y - p[(i+1)%3].y;
     b.x = p[i].x - p[(i+2)%3].x;
     b.y = p[i].y - p[(i+2)%3].y;
-
     float dot = a.x*b.x+a.y*b.y;
     float angle = acosf(dot/sqrtf((a.x*a.x)+(a.y*a.y))
             /sqrtf((b.x*b.x)+(b.y*b.y)));
@@ -39,6 +38,7 @@ __device__ float d_sim_angles(float2 *p, float2 *q, int2 *idx){
     int j2 = idx[1].y;
     int i3 = idx[2].x;
     int j3 = idx[2].y;
+
     float mean = (fabs(sinf(d_angle(p,i1))-sinf(d_angle(q,j1))) +
         fabs(sinf(d_angle(p,i2))-sinf(d_angle(q,j2))) +
         fabs(sinf(d_angle(p,i3))-sinf(d_angle(q,j3))))/3.0;
@@ -46,6 +46,7 @@ __device__ float d_sim_angles(float2 *p, float2 *q, int2 *idx){
     return expf(-mean/0.5);
 
 }
+
 
 __device__ float d_opposite_side(float2 *p,int i){
     float2 a;
@@ -78,19 +79,24 @@ __device__ float d_sim_desc(float *dp, float *dq, int2 *idx){
     int j2 = idx[1].y;
     int i3 = idx[2].x;
     int j3 = idx[2].y;
-    float a = dp[i1]-dq[j1];
-    float b = dp[i2]-dq[j2];
-    float c = dp[i3]-dq[j3];
-    a = sqrtf(powf(a,2));
-    b = sqrtf(powf(b,2));
-    c = sqrtf(powf(c,2));
+    float a = 0.0;
+    float b = 0.0;
+    float c = 0.0;
+    float mean;
 
-    return expf(-(((a+b+c)/3.0))/0.5);
+    for (int i = 0; i < 64; i++) {
+        a = a + powf(dp[i1*64+i] - dq[j1*64+i],2);
+        b = b + powf(dp[i2*64+i] - dq[j2*64+i],2);
+        c = c + powf(dp[i3*64+i] - dq[j3*64+i],2);
+    }
+    a = sqrtf(a); b = sqrtf(b); c = sqrtf(c);
+    mean = (a+b+c)/3.0;
+    return expf(-mean/0.5);
 
 }
 
 __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *dq,
-        float cang, float crat, float cdesc, float *t_ang, float *t_rat, float *t_desc, float *t_sim){
+        float cang, float crat, float cdesc){
 
     int2 perms_0[3],perms_1[3],perms_2[3];
     int2 perms_3[3],perms_4[3],perms_5[3];
@@ -240,8 +246,6 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
         sim = d_sim;
   }
 
-
-    //printf("hilo %d, sim_a %f \n", blockIdx.x*blockDim.x+threadIdx.x,sim_a);
     MatchSimilarity finalSimilarity;
     finalSimilarity.sim_a = sim_a;
     finalSimilarity.sim_r = sim_r;
@@ -252,10 +256,6 @@ __device__ MatchSimilarity d_similarity(float2 *p, float2 *q, float *dp, float *
         finalSimilarity.permutation[ll].x = point_match[ll].x;
         finalSimilarity.permutation[ll].y = point_match[ll].y;
     }
-    *t_ang = sim_a;
-    *t_rat = sim_r;
-    *t_desc = sim_d;
-    *t_sim = sim;
     return finalSimilarity;
 }
 
@@ -267,12 +267,11 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
         float crat, float cdesc, float thresholding,
         int edges1Size, int edges2Size, beforeMatches *before_matches, float *tests){
 
-    int i = blockIdx.x*blockDim.x + threadIdx.x;
+    int i = blockDim.x*blockIdx.x+threadIdx.x;
     float2 *p,*q;
     float *desc_p, *desc_q;
     p = (float2*) malloc(3*sizeof(float2));
     q = (float2*) malloc(3*sizeof(float2));
-
     desc_p = (float*)malloc(desc1Cols*sizeof(float)*3);
     desc_q = (float*)malloc(desc2Cols*sizeof(float)*3);
 
@@ -316,14 +315,14 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
             tests[i*edges2Size+j] = desc_q[2*desc2Cols+0];
 
             finalSimilarity = d_similarity(p,q,desc_p,desc_q,
-                    cang,crat,cdesc,&t_ang,&t_rat,&t_desc,
-                    &t_sim);
-            if(t_sim > max_similarity){
+                    cang,crat,cdesc);
+
+            if(finalSimilarity.sim > max_similarity){
                 best_index = j;
-                max_similarity = t_sim;
-                s_ang = t_ang;
-                s_ratios = t_rat;
-                s_desc = t_desc;
+                max_similarity = finalSimilarity.sim;
+                s_ang = finalSimilarity.sim_a;
+                s_ratios = finalSimilarity.sim_r;
+                s_desc = finalSimilarity.sim_d;
                 for (int ii = 0; ii < 3 ; ii++) {
                     int p_i = finalSimilarity.permutation[ii].x;
                     int q_i = finalSimilarity.permutation[ii].y;
@@ -331,23 +330,22 @@ __global__ void d_hyperedges (int *edges1, int *edges2,
                     edge_match_indices[ii].y = edges2[j*3+q_i];
                 }
 
-           }
+                before_matches[i].bestIndex_j = best_index;
+                before_matches[i].max_similarity = max_similarity;
+                before_matches[i].s_ang = s_ang;
+                before_matches[i].s_rat = s_ratios;
+                before_matches[i].s_desc = s_desc;
+                before_matches[i].edge_match_indices[0].x = edge_match_indices[0].x;
+                before_matches[i].edge_match_indices[0].y = edge_match_indices[0].y;
+                before_matches[i].edge_match_indices[1].x = edge_match_indices[1].x;
+                before_matches[i].edge_match_indices[1].y = edge_match_indices[1].y;
+                before_matches[i].edge_match_indices[2].x = edge_match_indices[2].x;
+                before_matches[i].edge_match_indices[2].y = edge_match_indices[2].y;
+            }
 
         }
 
-        printf("Hilo %d angle %f\n",i,s_ang);
 
-        before_matches[i].bestIndex_j = best_index;
-        before_matches[i].max_similarity = max_similarity;
-        before_matches[i].s_ang = s_ang;
-        before_matches[i].s_rat = s_ratios;
-        before_matches[i].s_desc = s_desc;
-        before_matches[i].edge_match_indices[0].x = edge_match_indices[0].x;
-        before_matches[i].edge_match_indices[0].y = edge_match_indices[0].y;
-        before_matches[i].edge_match_indices[1].x = edge_match_indices[1].x;
-        before_matches[i].edge_match_indices[1].y = edge_match_indices[1].y;
-        before_matches[i].edge_match_indices[2].x = edge_match_indices[2].x;
-        before_matches[i].edge_match_indices[2].y = edge_match_indices[2].y;
     }
 
     free(p);free(q);free(desc_p);free(desc_q);
