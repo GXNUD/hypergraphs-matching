@@ -191,23 +191,17 @@ void doMatch(Mat &img1, Mat &img2, double cang, double crat, double cdesc) {
   cout << Edges1.size() << " Edges from image 1" << endl;
   cout << Edges2.size() << " Edges from image 2" << endl;
   cout << endl << "Matching ..." << endl;
-
-  vector<pair<int, int> > edge_matches = match::hyperedges(
-    Edges1, Edges2,
-    kpts1, kpts2,
-    descriptor1, descriptor2,
-    cang, crat, cdesc, 0.40
+  pair<vector<hyperedgeMatch>, vector<DMatch>> edge_and_points_match;
+  edge_and_points_match = match::match(
+    Edges1, Edges2, kpts1, kpts2, descriptor1, descriptor2,
+    cang, crat, cdesc, 0.75, 0.75
   );
+  vector<hyperedgeMatch> edge_matches = edge_and_points_match.first;
+  vector<DMatch> point_matches = edge_and_points_match.second;
 
-  cout << endl << "Edges Matching done. ";
-  cout << edge_matches.size() << " edge matches passed!" << endl;
-
-  vector<DMatch> matches = match::points(
-    edge_matches, descriptor1, descriptor2,  Edges1, Edges2, 0.1
-  );
-
-  cout << endl << "Point Matching Done. ";
-  cout << matches.size() << " Point matches passed!" << endl;
+  cout << endl << "Matching Done. ";
+  cout << edge_matches.size() << " Hyperedge matches passed!" << endl;
+  cout << point_matches.size() << " Point matches passed!" << endl;
 
   // Draw Edges matching
   // draw::edgesMatch(
@@ -215,7 +209,7 @@ void doMatch(Mat &img1, Mat &img2, double cang, double crat, double cdesc) {
   // );
 
   // Draw Point matching
-  draw::pointsMatch(img1, kpts1, img2, kpts2, matches);
+  draw::pointsMatch(img1, kpts1, img2, kpts2, point_matches);
 }
 
 void cright() {
