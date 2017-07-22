@@ -493,8 +493,12 @@ int main(int argc, char *argv[]) {
       usage(argv[0]);
     }
   }
-
+  
+  clock_t begin = clock();
   doMatch(img[0], img[1], cang, crat, cdesc);
+  clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  cout << "Time: " << elapsed_secs << endl;
 
   return 0;
 }
