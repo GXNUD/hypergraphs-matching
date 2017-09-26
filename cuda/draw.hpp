@@ -72,10 +72,11 @@ namespace draw {
     void pointsMatch(Mat &img1, vector<KeyPoint> &kpts1, Mat &img2,
                      vector<KeyPoint> &kpts2, vector<DMatch> &matches) {
         Mat out_img;
-        namedWindow("Matches", WINDOW_NORMAL);
+  //      namedWindow("Matches", WINDOW_NORMAL);
         drawMatches(img1, kpts1, img2, kpts2, matches, out_img);
-        resizeWindow("Matches", 800, 900);
-        imshow("Matches", out_img);
-        waitKey(0);
+        imwrite("./outputMatches.jpg",out_img);
+    //    resizeWindow("Matches", 800, 900);
+      //  imshow("Matches", out_img);
+        //waitKey(0);
     }
 }

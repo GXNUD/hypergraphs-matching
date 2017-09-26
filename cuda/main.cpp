@@ -395,7 +395,7 @@ int doMatch(Mat &img1, Mat &img2, float cang,
   cout << Edges2.size() << " Edges from image 2" << endl;
 
   // Draw Point matching
-  //draw::pointsMatch(img1, kpts1, img2, kpts2, point_matches);
+  draw::pointsMatch(img1, kpts1, img2, kpts2, point_matches);
 
   free(edges1Array); free(keyPoints1Array); free(keyPoints2Array);
   free(descriptor1Array); free(descriptor2Array);
